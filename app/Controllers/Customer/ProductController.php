@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\ProductAttribute;
 use App\Models\ProductImage;
 use App\Models\ProductReview;
+use App\Models\Wishlist;
 
 final class ProductController extends Controller
 {
@@ -37,6 +38,8 @@ final class ProductController extends Controller
         $currentUser = Auth::user();
         $canReview = $currentUser !== null
             && !ProductReview::userHasReviewed((int) $product['id'], (int) $currentUser['id']);
+        $isWishlisted = $currentUser !== null
+            && Wishlist::exists((int) $currentUser['id'], (int) $product['id']);
 
         $related = Product::publicPaginate(1, 5, ['category_id' => (string) $product['category_id']], 'newest');
         $relatedProducts = array_slice(
@@ -58,6 +61,8 @@ final class ProductController extends Controller
             'reviews' => ProductReview::approvedForProduct((int) $product['id']),
             'ratingSummary' => ProductReview::ratingSummary((int) $product['id']),
             'canReview' => $canReview,
+            'isLoggedIn' => $currentUser !== null,
+            'isWishlisted' => $isWishlisted,
             'relatedProducts' => $relatedProducts,
         ], 'customer/layouts/site');
     }

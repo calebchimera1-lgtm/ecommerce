@@ -294,15 +294,21 @@ CREATE TABLE `wishlists` (
 -- =====================================================================
 
 CREATE TABLE `carts` (
-    `id`         BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `user_id`    BIGINT UNSIGNED NULL COMMENT 'NULL for guest carts identified by session_id',
-    `session_id` VARCHAR(100) NULL,
-    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `id`                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `user_id`             BIGINT UNSIGNED NULL COMMENT 'NULL for guest carts identified by session_id',
+    `session_id`          VARCHAR(100) NULL,
+    `coupon_id`           BIGINT UNSIGNED NULL COMMENT 'Coupon applied at the cart stage, before checkout exists',
+    `shipping_method_id`  INT UNSIGNED NULL COMMENT 'Shipping method chosen at the cart stage',
+    `created_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY `idx_carts_user` (`user_id`),
     KEY `idx_carts_session` (`session_id`),
     CONSTRAINT `fk_carts_user`
-        FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+        FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_carts_coupon`
+        FOREIGN KEY (`coupon_id`) REFERENCES `coupons` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_carts_shipping_method`
+        FOREIGN KEY (`shipping_method_id`) REFERENCES `shipping_methods` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE `cart_items` (

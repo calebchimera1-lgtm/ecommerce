@@ -1,10 +1,12 @@
 <?php
 
 use App\Core\Auth;
+use App\Models\Cart;
 use App\Models\Category;
 
 $megaMenuCategories = Category::activeOrdered();
 $isLoggedIn = Auth::check();
+$cartItemCount = Cart::currentItemCount();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,17 +60,31 @@ $isLoggedIn = Auth::check();
                     </form>
                     <ul class="navbar-nav align-items-lg-center">
                         <?php if ($isLoggedIn): ?>
+                            <li class="nav-item"><a class="nav-link" href="/wishlist"><i class="fa-regular fa-heart"></i> Wishlist</a></li>
                             <li class="nav-item"><a class="nav-link" href="/account"><i class="fa-regular fa-user"></i> Account</a></li>
                         <?php else: ?>
                             <li class="nav-item"><a class="nav-link" href="/login"><i class="fa-regular fa-user"></i> Sign In</a></li>
                         <?php endif; ?>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="/cart">
+                                <i class="fa-solid fa-bag-shopping"></i> Cart
+                                <?php if ($cartItemCount > 0): ?>
+                                    <span class="badge rounded-pill bg-warning text-dark ms-1"><?= $cartItemCount ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main><?php $content(); ?></main>
+    <main>
+        <div class="container mt-4">
+            <?php require dirname(__DIR__, 2) . '/partials/alerts.php'; ?>
+        </div>
+        <?php $content(); ?>
+    </main>
 
     <div class="newsletter-section">
         <div class="container">

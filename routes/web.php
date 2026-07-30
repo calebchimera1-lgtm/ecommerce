@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use App\Controllers\Customer\AuthController;
+use App\Controllers\Customer\CartController;
 use App\Controllers\Customer\DashboardController;
 use App\Controllers\Customer\HomeController;
 use App\Controllers\Customer\NewsletterController;
 use App\Controllers\Customer\ProductController;
 use App\Controllers\Customer\ShopController;
 use App\Controllers\Customer\StaticController;
+use App\Controllers\Customer\WishlistController;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\GuestMiddleware;
@@ -63,4 +65,18 @@ return function (Router $router): void {
     $router->get('/terms', [StaticController::class, 'terms']);
 
     $router->post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'], [VerifyCsrfMiddleware::class]);
+
+    // Cart - works for both guests (session-identified) and logged-in
+    // customers (user-identified, merged from any guest cart on login).
+    $router->get('/cart', [CartController::class, 'index']);
+    $router->post('/cart/add', [CartController::class, 'add'], [VerifyCsrfMiddleware::class]);
+    $router->post('/cart/update/{id}', [CartController::class, 'update'], [VerifyCsrfMiddleware::class]);
+    $router->post('/cart/remove/{id}', [CartController::class, 'remove'], [VerifyCsrfMiddleware::class]);
+    $router->post('/cart/coupon', [CartController::class, 'applyCoupon'], [VerifyCsrfMiddleware::class]);
+    $router->post('/cart/coupon/remove', [CartController::class, 'removeCoupon'], [VerifyCsrfMiddleware::class]);
+    $router->post('/cart/shipping', [CartController::class, 'setShipping'], [VerifyCsrfMiddleware::class]);
+
+    // Wishlist requires an account (no guest wishlist in the schema).
+    $router->get('/wishlist', [WishlistController::class, 'index'], [AuthMiddleware::class]);
+    $router->post('/wishlist/toggle', [WishlistController::class, 'toggle'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
 };

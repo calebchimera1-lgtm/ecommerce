@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Controllers\Admin\AuthController;
 use App\Controllers\Admin\BrandController;
 use App\Controllers\Admin\CategoryController;
+use App\Controllers\Admin\CouponController;
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\ProductController;
 use App\Controllers\Admin\SettingsController;
@@ -60,4 +61,12 @@ return function (Router $router): void {
     $router->post('/admin/products/{id}/delete', [ProductController::class, 'destroy'], [...$productsPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/products/{id}/images/{imageId}/delete', [ProductController::class, 'deleteImage'], [...$productsPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/products/{id}/images/{imageId}/primary', [ProductController::class, 'setPrimaryImage'], [...$productsPermission, VerifyCsrfMiddleware::class]);
+
+    $couponsPermission = [[PermissionMiddleware::class, 'coupons.manage']];
+    $router->get('/admin/coupons', [CouponController::class, 'index'], $couponsPermission);
+    $router->get('/admin/coupons/create', [CouponController::class, 'create'], $couponsPermission);
+    $router->post('/admin/coupons', [CouponController::class, 'store'], [...$couponsPermission, VerifyCsrfMiddleware::class]);
+    $router->get('/admin/coupons/{id}/edit', [CouponController::class, 'edit'], $couponsPermission);
+    $router->post('/admin/coupons/{id}', [CouponController::class, 'update'], [...$couponsPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/coupons/{id}/delete', [CouponController::class, 'destroy'], [...$couponsPermission, VerifyCsrfMiddleware::class]);
 };

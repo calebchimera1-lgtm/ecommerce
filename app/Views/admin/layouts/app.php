@@ -14,6 +14,7 @@ $navItems = [
     ['label' => 'Products', 'icon' => 'fa-box', 'href' => '/admin/products', 'permission' => 'products.manage'],
     ['label' => 'Categories', 'icon' => 'fa-sitemap', 'href' => '/admin/categories', 'permission' => 'categories.manage'],
     ['label' => 'Brands', 'icon' => 'fa-tags', 'href' => '/admin/brands', 'permission' => 'brands.manage'],
+    ['label' => 'Coupons', 'icon' => 'fa-ticket', 'href' => '/admin/coupons', 'permission' => 'coupons.manage'],
     ['label' => 'Settings', 'icon' => 'fa-gear', 'href' => '/admin/settings', 'permission' => 'settings.manage'],
 ];
 ?>

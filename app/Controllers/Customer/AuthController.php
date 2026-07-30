@@ -10,6 +10,7 @@ use App\Core\RateLimiter;
 use App\Core\Request;
 use App\Core\Session;
 use App\Core\Uuid;
+use App\Models\Cart;
 use App\Models\PasswordReset;
 use App\Models\Role;
 use App\Models\User;
@@ -103,8 +104,12 @@ final class AuthController extends Controller
         }
 
         RateLimiter::hit($identifier, $ip, true);
+        // Capture the pre-login session id before Auth::login() regenerates
+        // it, so any guest cart tied to this session can still be found.
+        $guestSessionId = session_id();
         Auth::login($user, remember: $request->input('remember') !== null);
         User::update($user['id'], ['last_login_at' => date('Y-m-d H:i:s'), 'last_login_ip' => $ip]);
+        Cart::mergeSessionCartIntoUser($guestSessionId, (int) $user['id']);
 
         $this->redirect('/account');
     }

@@ -2,7 +2,7 @@
 /**
  * @var array $product @var array $images @var array $groupedAttributes @var array $specifications
  * @var array $reviews @var array{count:int,average:float} $ratingSummary @var bool $canReview
- * @var array $relatedProducts
+ * @var bool $isLoggedIn @var bool $isWishlisted @var array $relatedProducts
  */
 $hasSale = $product['sale_price'] !== null;
 $stockLabel = match ($product['stock_status']) {
@@ -76,19 +76,44 @@ $stockClass = match ($product['stock_status']) {
                     <p class="text-white-50"><?= e($product['short_description']) ?></p>
                 <?php endif; ?>
 
-                <?php foreach ($groupedAttributes as $attributeName => $options): ?>
-                    <div class="mb-3">
-                        <div class="sans small text-white-50 mb-1"><?= e($attributeName) ?></div>
-                        <?php foreach ($options as $option): ?>
-                            <span class="variant-option"><?= e($option['attribute_value']) ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endforeach; ?>
-
                 <div class="mt-4">
-                    <button type="button" class="btn btn-gold btn-lg px-4" disabled title="Shopping cart launches in the next module">
-                        <i class="fa-solid fa-bag-shopping"></i> Add to Cart &mdash; Coming Soon
-                    </button>
+                    <form method="POST" action="/cart/add" id="addToCartForm">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="slug" value="<?= e($product['slug']) ?>">
+
+                        <?php if (!empty($groupedAttributes)): ?>
+                            <div class="mb-3">
+                                <label class="sans small text-white-50 mb-1 d-block" for="product_attribute_id">Options</label>
+                                <select class="form-select" id="product_attribute_id" name="product_attribute_id" style="max-width:320px;">
+                                    <?php foreach ($groupedAttributes as $attributeName => $options): ?>
+                                        <?php foreach ($options as $option): ?>
+                                            <option value="<?= (int) $option['id'] ?>">
+                                                <?= e($attributeName) ?>: <?= e($option['attribute_value']) ?>
+                                                <?php if ((float) $option['price_modifier'] > 0): ?> (+<?= money($option['price_modifier']) ?>)<?php endif; ?>
+                                                <?= (int) $option['stock_quantity'] === 0 ? ' - Out of stock' : '' ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="number" name="quantity" value="1" min="1" class="form-control" style="width:80px;">
+                            <button type="submit" class="btn btn-gold btn-lg px-4" <?= $product['stock_status'] === 'out_of_stock' ? 'disabled' : '' ?>>
+                                <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+                            </button>
+                            <?php if ($isLoggedIn): ?>
+                                <button type="submit" formaction="/wishlist/toggle" class="btn btn-outline-gold btn-lg" title="<?= $isWishlisted ? 'Remove from wishlist' : 'Add to wishlist' ?>">
+                                    <i class="fa-<?= $isWishlisted ? 'solid' : 'regular' ?> fa-heart"></i>
+                                </button>
+                            <?php else: ?>
+                                <a href="/login" class="btn btn-outline-gold btn-lg" title="Sign in to save to your wishlist">
+                                    <i class="fa-regular fa-heart"></i>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </form>
                 </div>
 
                 <div class="mt-4 sans small text-white-50">
