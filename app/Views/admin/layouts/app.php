@@ -11,6 +11,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 // role_permissions matrix from Module 1.
 $navItems = [
     ['label' => 'Dashboard', 'icon' => 'fa-gauge', 'href' => '/admin/dashboard', 'permission' => 'dashboard.view'],
+    ['label' => 'Orders', 'icon' => 'fa-receipt', 'href' => '/admin/orders', 'permission' => 'orders.view'],
     ['label' => 'Products', 'icon' => 'fa-box', 'href' => '/admin/products', 'permission' => 'products.manage'],
     ['label' => 'Categories', 'icon' => 'fa-sitemap', 'href' => '/admin/categories', 'permission' => 'categories.manage'],
     ['label' => 'Brands', 'icon' => 'fa-tags', 'href' => '/admin/brands', 'permission' => 'brands.manage'],

@@ -48,4 +48,28 @@ final class ProductReview extends Model
 
         return (int) $stmt->fetch()['total'] > 0;
     }
+
+    public static function forUser(int $userId): array
+    {
+        $stmt = self::db()->prepare(
+            'SELECT pr.*, p.name AS product_name, p.slug AS product_slug
+             FROM product_reviews pr
+             JOIN products p ON p.id = pr.product_id
+             WHERE pr.user_id = :user_id
+             ORDER BY pr.created_at DESC'
+        );
+        $stmt->execute(['user_id' => $userId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function belongsToUser(int $reviewId, int $userId): bool
+    {
+        $stmt = self::db()->prepare(
+            'SELECT COUNT(*) AS total FROM product_reviews WHERE id = :id AND user_id = :user_id'
+        );
+        $stmt->execute(['id' => $reviewId, 'user_id' => $userId]);
+
+        return (int) $stmt->fetch()['total'] > 0;
+    }
 }

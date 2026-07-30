@@ -7,6 +7,7 @@ use App\Controllers\Admin\BrandController;
 use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\CouponController;
 use App\Controllers\Admin\DashboardController;
+use App\Controllers\Admin\OrderController;
 use App\Controllers\Admin\ProductController;
 use App\Controllers\Admin\SettingsController;
 use App\Core\Response;
@@ -69,4 +70,11 @@ return function (Router $router): void {
     $router->get('/admin/coupons/{id}/edit', [CouponController::class, 'edit'], $couponsPermission);
     $router->post('/admin/coupons/{id}', [CouponController::class, 'update'], [...$couponsPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/coupons/{id}/delete', [CouponController::class, 'destroy'], [...$couponsPermission, VerifyCsrfMiddleware::class]);
+
+    $ordersViewPermission = [[PermissionMiddleware::class, 'orders.view']];
+    $ordersManagePermission = [[PermissionMiddleware::class, 'orders.manage']];
+    $router->get('/admin/orders', [OrderController::class, 'index'], $ordersViewPermission);
+    $router->get('/admin/orders/{id}', [OrderController::class, 'show'], $ordersViewPermission);
+    $router->post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/orders/{id}/shipment', [OrderController::class, 'updateShipment'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
 };

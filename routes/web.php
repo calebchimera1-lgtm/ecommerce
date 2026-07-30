@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Controllers\Customer\AddressController;
 use App\Controllers\Customer\AuthController;
 use App\Controllers\Customer\CartController;
 use App\Controllers\Customer\CheckoutController;
@@ -10,6 +11,8 @@ use App\Controllers\Customer\HomeController;
 use App\Controllers\Customer\NewsletterController;
 use App\Controllers\Customer\OrderController;
 use App\Controllers\Customer\ProductController;
+use App\Controllers\Customer\ProfileController;
+use App\Controllers\Customer\ReviewController;
 use App\Controllers\Customer\ShopController;
 use App\Controllers\Customer\StaticController;
 use App\Controllers\Customer\WishlistController;
@@ -89,4 +92,23 @@ return function (Router $router): void {
 
     $router->get('/order/{orderNumber}/confirmation', [OrderController::class, 'confirmation'], [AuthMiddleware::class]);
     $router->get('/order/{orderNumber}/invoice', [OrderController::class, 'invoice'], [AuthMiddleware::class]);
+
+    // Order history / tracking.
+    $router->get('/account/orders', [OrderController::class, 'history'], [AuthMiddleware::class]);
+    $router->get('/account/orders/{orderNumber}', [OrderController::class, 'show'], [AuthMiddleware::class]);
+
+    // My Reviews.
+    $router->get('/account/reviews', [ReviewController::class, 'index'], [AuthMiddleware::class]);
+    $router->get('/account/reviews/{id}/edit', [ReviewController::class, 'edit'], [AuthMiddleware::class]);
+    $router->post('/account/reviews/{id}', [ReviewController::class, 'update'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/account/reviews/{id}/delete', [ReviewController::class, 'destroy'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    // Profile + password + address book.
+    $router->get('/account/profile', [ProfileController::class, 'index'], [AuthMiddleware::class]);
+    $router->post('/account/profile', [ProfileController::class, 'updateProfile'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/account/password', [ProfileController::class, 'updatePassword'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    $router->post('/account/addresses', [AddressController::class, 'store'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/account/addresses/{id}', [AddressController::class, 'update'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/account/addresses/{id}/delete', [AddressController::class, 'destroy'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
 };

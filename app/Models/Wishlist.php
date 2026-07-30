@@ -54,4 +54,9 @@ final class Wishlist extends Model
 
         return true;
     }
+
+    public static function countForUser(int $userId): int
+    {
+        return self::count('user_id = :user_id', ['user_id' => $userId]);
+    }
 }
