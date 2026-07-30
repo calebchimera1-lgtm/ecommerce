@@ -109,9 +109,7 @@
                         </div>
                     </div>
 
-                    <button type="button" class="btn btn-gold w-100 mt-4" disabled title="Checkout launches in the next module">
-                        Proceed to Checkout &mdash; Coming Soon
-                    </button>
+                    <a href="/checkout" class="btn btn-gold w-100 mt-4">Proceed to Checkout</a>
                     <p class="sans small text-white-50 mt-2 mb-0">Final tax is calculated at checkout based on your shipping address.</p>
                 </div>
             </div>

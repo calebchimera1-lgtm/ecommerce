@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Controllers\Customer\AuthController;
 use App\Controllers\Customer\CartController;
+use App\Controllers\Customer\CheckoutController;
 use App\Controllers\Customer\DashboardController;
 use App\Controllers\Customer\HomeController;
 use App\Controllers\Customer\NewsletterController;
+use App\Controllers\Customer\OrderController;
 use App\Controllers\Customer\ProductController;
 use App\Controllers\Customer\ShopController;
 use App\Controllers\Customer\StaticController;
@@ -79,4 +81,12 @@ return function (Router $router): void {
     // Wishlist requires an account (no guest wishlist in the schema).
     $router->get('/wishlist', [WishlistController::class, 'index'], [AuthMiddleware::class]);
     $router->post('/wishlist/toggle', [WishlistController::class, 'toggle'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    // Checkout requires an account - the schema's orders.user_id is
+    // NOT NULL, so there is no guest checkout to support.
+    $router->get('/checkout', [CheckoutController::class, 'index'], [AuthMiddleware::class]);
+    $router->post('/checkout', [CheckoutController::class, 'store'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    $router->get('/order/{orderNumber}/confirmation', [OrderController::class, 'confirmation'], [AuthMiddleware::class]);
+    $router->get('/order/{orderNumber}/invoice', [OrderController::class, 'invoice'], [AuthMiddleware::class]);
 };

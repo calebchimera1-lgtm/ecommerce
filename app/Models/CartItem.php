@@ -17,9 +17,9 @@ final class CartItem extends Model
     public static function forCart(int $cartId): array
     {
         $stmt = self::db()->prepare(
-            'SELECT ci.*, p.name AS product_name, p.slug AS product_slug,
+            'SELECT ci.*, p.name AS product_name, p.slug AS product_slug, p.sku AS product_sku,
                     p.stock_quantity AS product_stock,
-                    pa.attribute_name, pa.attribute_value, pa.stock_quantity AS attribute_stock,
+                    pa.attribute_name, pa.attribute_value, pa.stock_quantity AS attribute_stock, pa.sku_suffix,
                     (SELECT image_path FROM product_images pi WHERE pi.product_id = p.id
                         ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC LIMIT 1) AS image_path
              FROM cart_items ci
@@ -83,5 +83,11 @@ final class CartItem extends Model
             'quantity' => $quantity,
             'price' => $price,
         ]);
+    }
+
+    public static function clearForCart(int $cartId): void
+    {
+        $stmt = self::db()->prepare('DELETE FROM cart_items WHERE cart_id = :cart_id');
+        $stmt->execute(['cart_id' => $cartId]);
     }
 }

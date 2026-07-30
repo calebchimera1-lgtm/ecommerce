@@ -17,9 +17,11 @@ admin authentication and RBAC middleware,
 [`docs/MODULE_4_PRODUCT_CATALOG.md`](docs/MODULE_4_PRODUCT_CATALOG.md) for
 the admin product catalog,
 [`docs/MODULE_5_STOREFRONT.md`](docs/MODULE_5_STOREFRONT.md) for the
-public storefront, and
+public storefront,
 [`docs/MODULE_6_CART_WISHLIST.md`](docs/MODULE_6_CART_WISHLIST.md) for
-cart and wishlist.
+cart and wishlist, and
+[`docs/MODULE_7_CHECKOUT_ORDERS_PAYMENTS.md`](docs/MODULE_7_CHECKOUT_ORDERS_PAYMENTS.md)
+for checkout, orders, and payments.
 
 ## Tech stack
 
@@ -64,7 +66,7 @@ Being delivered module by module per the build plan. Completed so far:
 - [x] **Module 4** — Product catalog (categories, brands, products, variants) — admin CRUD
 - [x] **Module 5** — Storefront: home, shop, product details, search
 - [x] **Module 6** — Cart & wishlist
-- [ ] Module 7 — Checkout, orders, payments (abstract gateway layer)
+- [x] **Module 7** — Checkout, orders, payments (abstract gateway layer)
 - [ ] Module 8 — Customer dashboard, order history, tracking, reviews
 - [ ] Module 9 — Admin dashboard & analytics
 - [ ] Module 10 — Admin catalog/order/customer management

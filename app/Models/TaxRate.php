@@ -24,4 +24,21 @@ final class TaxRate extends Model
 
         return $row === false ? null : $row;
     }
+
+    /**
+     * Called once checkout actually knows the shipping country, so the
+     * final order uses a jurisdiction-matched rate instead of the
+     * cart page's placeholder estimate. Falls back to the default rate
+     * if no rate is configured for that country.
+     */
+    public static function forCountry(string $country): ?array
+    {
+        $stmt = self::db()->prepare(
+            'SELECT * FROM tax_rates WHERE is_active = 1 AND country = :country ORDER BY id ASC LIMIT 1'
+        );
+        $stmt->execute(['country' => $country]);
+        $row = $stmt->fetch();
+
+        return $row !== false ? $row : self::defaultRate();
+    }
 }
