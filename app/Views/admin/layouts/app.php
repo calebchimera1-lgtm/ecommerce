@@ -11,6 +11,9 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 // role_permissions matrix from Module 1.
 $navItems = [
     ['label' => 'Dashboard', 'icon' => 'fa-gauge', 'href' => '/admin/dashboard', 'permission' => 'dashboard.view'],
+    ['label' => 'Products', 'icon' => 'fa-box', 'href' => '/admin/products', 'permission' => 'products.manage'],
+    ['label' => 'Categories', 'icon' => 'fa-sitemap', 'href' => '/admin/categories', 'permission' => 'categories.manage'],
+    ['label' => 'Brands', 'icon' => 'fa-tags', 'href' => '/admin/brands', 'permission' => 'brands.manage'],
     ['label' => 'Settings', 'icon' => 'fa-gear', 'href' => '/admin/settings', 'permission' => 'settings.manage'],
 ];
 ?>
@@ -72,7 +75,7 @@ $navItems = [
             <div class="sidebar-brand">Kymera<span>Admin</span></div>
             <?php foreach ($navItems as $item): ?>
                 <?php if (Auth::can($item['permission'])): ?>
-                    <a class="admin-nav-link<?= $currentPath === $item['href'] ? ' active' : '' ?>" href="<?= e($item['href']) ?>">
+                    <a class="admin-nav-link<?= str_starts_with((string) $currentPath, $item['href']) ? ' active' : '' ?>" href="<?= e($item['href']) ?>">
                         <i class="fa-solid <?= e($item['icon']) ?>"></i> <?= e($item['label']) ?>
                     </a>
                 <?php endif; ?>

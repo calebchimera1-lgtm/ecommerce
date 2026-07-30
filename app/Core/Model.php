@@ -136,6 +136,41 @@ abstract class Model
     }
 
     /**
+     * Append -2, -3, ... to $base until it's unique in this table's
+     * `slug` column. Assumes the model has a `slug` column - true for
+     * every model that currently uses this helper (categories, brands,
+     * products).
+     */
+    protected static function uniqueSlug(string $base, ?int $ignoreId = null): string
+    {
+        $slug = $base;
+        $suffix = 2;
+
+        while (self::slugTaken($slug, $ignoreId)) {
+            $slug = $base . '-' . $suffix;
+            $suffix++;
+        }
+
+        return $slug;
+    }
+
+    private static function slugTaken(string $slug, ?int $ignoreId): bool
+    {
+        $sql = sprintf('SELECT COUNT(*) AS total FROM %s WHERE slug = :slug', static::$table);
+        $bindings = ['slug' => $slug];
+
+        if ($ignoreId !== null) {
+            $sql .= sprintf(' AND %s != :ignore_id', static::$primaryKey);
+            $bindings['ignore_id'] = $ignoreId;
+        }
+
+        $stmt = self::db()->prepare($sql);
+        $stmt->execute($bindings);
+
+        return (int) $stmt->fetch()['total'] > 0;
+    }
+
+    /**
      * Allow only safe identifier characters in dynamically built column
      * names, since PDO cannot bind identifiers as parameters.
      */
