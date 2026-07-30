@@ -264,4 +264,18 @@ final class Product extends Model
 
         return $stmt->fetchAll();
     }
+
+    public static function lowStock(int $limit = 10): array
+    {
+        $stmt = self::db()->prepare(
+            'SELECT * FROM products
+             WHERE deleted_at IS NULL AND is_active = 1 AND stock_quantity <= low_stock_threshold
+             ORDER BY stock_quantity ASC
+             LIMIT :limit'
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
 }
