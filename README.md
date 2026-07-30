@@ -13,9 +13,11 @@ This project is being built module by module. See
 foundation (architecture, folder structure, database schema, config),
 [`docs/MODULE_2_AUTHENTICATION.md`](docs/MODULE_2_AUTHENTICATION.md) for
 customer authentication, [`docs/MODULE_3_ADMIN_AUTH_RBAC.md`](docs/MODULE_3_ADMIN_AUTH_RBAC.md) for
-admin authentication and RBAC middleware, and
+admin authentication and RBAC middleware,
 [`docs/MODULE_4_PRODUCT_CATALOG.md`](docs/MODULE_4_PRODUCT_CATALOG.md) for
-the admin product catalog.
+the admin product catalog, and
+[`docs/MODULE_5_STOREFRONT.md`](docs/MODULE_5_STOREFRONT.md) for the
+public storefront.
 
 ## Tech stack
 
@@ -58,7 +60,7 @@ Being delivered module by module per the build plan. Completed so far:
 - [x] **Module 2** — Customer authentication (register/login/verify/reset/remember-me)
 - [x] **Module 3** — Admin authentication & RBAC middleware
 - [x] **Module 4** — Product catalog (categories, brands, products, variants) — admin CRUD
-- [ ] Module 5 — Storefront: home, shop, product details, search
+- [x] **Module 5** — Storefront: home, shop, product details, search
 - [ ] Module 6 — Cart & wishlist
 - [ ] Module 7 — Checkout, orders, payments (abstract gateway layer)
 - [ ] Module 8 — Customer dashboard, order history, tracking, reviews

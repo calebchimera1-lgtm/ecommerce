@@ -1,52 +1,134 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $this->e($pageTitle) ?></title>
-    <meta name="description" content="Kymera Collection - a luxury destination for fashion, watches, jewelry, perfumes, bags and accessories.">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --kymera-black: #0b0b0c;
-            --kymera-gold: #c9a24b;
-            --kymera-white: #f8f7f4;
-        }
-        body {
-            background: var(--kymera-black);
-            color: var(--kymera-white);
-            font-family: "Georgia", serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-        .brand {
-            letter-spacing: 0.35em;
-            font-size: 2.5rem;
-            color: var(--kymera-gold);
-            text-transform: uppercase;
-        }
-        .tagline {
-            letter-spacing: 0.15em;
-            opacity: 0.75;
-        }
-        .divider {
-            width: 60px;
-            height: 1px;
-            background: var(--kymera-gold);
-            margin: 1.5rem auto;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="brand">Kymera Collection</div>
-        <div class="divider"></div>
-        <p class="tagline">Luxury Redefined &mdash; Scaffold Live &mdash; Full Storefront Coming in the Next Modules</p>
-        <p class="small text-white-50">Skeleton served by the custom PHP MVC core. See <code>/health</code> for a JSON status check.</p>
+<?php
+/**
+ * @var array $featuredCategories @var array $newArrivals @var array $trending
+ * @var array $onSale @var array $featuredProducts @var array $testimonials
+ */
+$categoryIcons = [
+    'fashion' => 'fa-shirt',
+    'shoes' => 'fa-shoe-prints',
+    'watches' => 'fa-clock',
+    'perfumes' => 'fa-spray-can-sparkles',
+    'jewelry' => 'fa-gem',
+    'bags' => 'fa-bag-shopping',
+    'accessories' => 'fa-glasses',
+];
+
+$renderGrid = static function (array $products): void {
+    foreach ($products as $product) {
+        echo '<div class="col-6 col-md-4 col-lg-3 mb-4">';
+        require dirname(__DIR__, 2) . '/partials/product-card.php';
+        echo '</div>';
+    }
+};
+?>
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-eyebrow">Kymera Collection</div>
+        <h1 class="hero-title">Luxury, Curated<br>For the Discerning Few</h1>
+        <p class="hero-subtitle">Fashion, watches, jewelry, perfumes, bags, and accessories - each piece chosen for its craftsmanship and character.</p>
+        <a href="/shop" class="btn btn-gold btn-lg px-4 py-2">Explore the Collection</a>
     </div>
-</body>
-</html>
+</section>
+
+<?php if (!empty($featuredCategories)): ?>
+<section class="section">
+    <div class="container">
+        <div class="section-heading">
+            <div class="section-eyebrow">Collections</div>
+            <h2 class="section-title">Shop by Category</h2>
+        </div>
+        <div class="row g-3">
+            <?php foreach ($featuredCategories as $category): ?>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="/shop/category/<?= e($category['slug']) ?>" class="collection-card">
+                        <i class="fa-solid <?= e($categoryIcons[$category['slug']] ?? 'fa-tags') ?>"></i>
+                        <span class="collection-card-name"><?= e($category['name']) ?></span>
+                    </a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (!empty($newArrivals)): ?>
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-heading">
+            <div class="section-eyebrow">Just In</div>
+            <h2 class="section-title">New Arrivals</h2>
+        </div>
+        <div class="row">
+            <?php $renderGrid($newArrivals); ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (!empty($onSale)): ?>
+<section class="section">
+    <div class="container">
+        <div class="section-heading">
+            <div class="section-eyebrow">Limited Time</div>
+            <h2 class="section-title">Flash Sale</h2>
+        </div>
+        <div class="row">
+            <?php $renderGrid($onSale); ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (!empty($featuredProducts)): ?>
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-heading">
+            <div class="section-eyebrow">Editor's Pick</div>
+            <h2 class="section-title">Featured Products</h2>
+        </div>
+        <div class="row">
+            <?php $renderGrid($featuredProducts); ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (!empty($trending)): ?>
+<section class="section">
+    <div class="container">
+        <div class="section-heading">
+            <div class="section-eyebrow">Most Viewed</div>
+            <h2 class="section-title">Trending Now</h2>
+        </div>
+        <div class="row">
+            <?php $renderGrid($trending); ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (!empty($testimonials)): ?>
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-heading">
+            <div class="section-eyebrow">Testimonials</div>
+            <h2 class="section-title">What Our Clients Say</h2>
+        </div>
+        <div class="row g-4">
+            <?php foreach ($testimonials as $testimonial): ?>
+                <div class="col-md-6 col-lg-3">
+                    <div class="testimonial-card">
+                        <div class="testimonial-stars">
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <i class="fa-<?= $i <= (int) $testimonial['rating'] ? 'solid' : 'regular' ?> fa-star"></i>
+                            <?php endfor; ?>
+                        </div>
+                        <p class="text-white-50 small">&ldquo;<?= e($testimonial['message']) ?>&rdquo;</p>
+                        <div class="testimonial-name">&mdash; <?= e($testimonial['customer_name']) ?></div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>

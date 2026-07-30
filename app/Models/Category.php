@@ -66,4 +66,20 @@ final class Category extends Model
     {
         return self::uniqueSlug(Str::slug($name), $ignoreId);
     }
+
+    public static function activeOrdered(): array
+    {
+        $stmt = self::db()->query('SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC');
+
+        return $stmt->fetchAll();
+    }
+
+    public static function findActiveBySlug(string $slug): ?array
+    {
+        $stmt = self::db()->prepare('SELECT * FROM categories WHERE slug = :slug AND is_active = 1 LIMIT 1');
+        $stmt->execute(['slug' => $slug]);
+        $row = $stmt->fetch();
+
+        return $row === false ? null : $row;
+    }
 }

@@ -5,6 +5,10 @@ declare(strict_types=1);
 use App\Controllers\Customer\AuthController;
 use App\Controllers\Customer\DashboardController;
 use App\Controllers\Customer\HomeController;
+use App\Controllers\Customer\NewsletterController;
+use App\Controllers\Customer\ProductController;
+use App\Controllers\Customer\ShopController;
+use App\Controllers\Customer\StaticController;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\GuestMiddleware;
@@ -39,4 +43,24 @@ return function (Router $router): void {
 
     // Authenticated customer area.
     $router->get('/account', [DashboardController::class, 'index'], [AuthMiddleware::class]);
+
+    // Storefront: shop, category/brand browsing, search.
+    $router->get('/shop', [ShopController::class, 'index']);
+    $router->get('/shop/category/{slug}', [ShopController::class, 'category']);
+    $router->get('/shop/brand/{slug}', [ShopController::class, 'brand']);
+    $router->get('/search', [ShopController::class, 'search']);
+
+    // Product detail + reviews (submitting a review requires being logged in).
+    $router->get('/product/{slug}', [ProductController::class, 'show']);
+    $router->post('/product/{slug}/reviews', [ProductController::class, 'storeReview'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    // Static/content pages.
+    $router->get('/about', [StaticController::class, 'about']);
+    $router->get('/contact', [StaticController::class, 'showContact']);
+    $router->post('/contact', [StaticController::class, 'submitContact'], [VerifyCsrfMiddleware::class]);
+    $router->get('/faqs', [StaticController::class, 'faqs']);
+    $router->get('/privacy-policy', [StaticController::class, 'privacy']);
+    $router->get('/terms', [StaticController::class, 'terms']);
+
+    $router->post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'], [VerifyCsrfMiddleware::class]);
 };
