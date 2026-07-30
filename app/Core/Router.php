@@ -6,7 +6,8 @@ namespace App\Core;
 
 /**
  * Minimal, dependency-free HTTP router with named parameters and
- * per-route middleware stacks.
+ * per-route middleware stacks. Each middleware entry is either a
+ * class-string or [class-string, ...constructorArgs].
  */
 final class Router
 {
@@ -71,10 +72,8 @@ final class Router
                 $params = array_combine($route['keys'], $matches) ?: [];
                 $request = new Request($params);
 
-                foreach ($route['middleware'] as $middlewareClass) {
-                    /** @var MiddlewareInterface $middleware */
-                    $middleware = new $middlewareClass();
-                    if (!$middleware->handle($request)) {
+                foreach ($route['middleware'] as $middlewareEntry) {
+                    if (!$this->resolveMiddleware($middlewareEntry)->handle($request)) {
                         return;
                     }
                 }
@@ -85,6 +84,23 @@ final class Router
         }
 
         Response::abort(404, 'Page not found');
+    }
+
+    /**
+     * A middleware entry is either a bare class-string (no constructor
+     * args, e.g. AuthMiddleware::class) or [class-string, ...args] for
+     * middleware that needs configuration, e.g.
+     * [PermissionMiddleware::class, 'products.manage'].
+     */
+    private function resolveMiddleware(mixed $entry): MiddlewareInterface
+    {
+        if (is_array($entry)) {
+            $class = $entry[0];
+            $args = array_slice($entry, 1);
+            return new $class(...$args);
+        }
+
+        return new $entry();
     }
 
     private function callHandler(mixed $handler, Request $request): void

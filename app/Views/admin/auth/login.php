@@ -1,0 +1,14 @@
+<h5 class="text-center mb-4" style="color:rgba(248,247,244,.75);">Staff Sign In</h5>
+<form method="POST" action="/admin/login" novalidate>
+    <?= csrf_field() ?>
+    <div class="mb-3">
+        <label class="form-label" for="email">Email address</label>
+        <input type="email" class="form-control" id="email" name="email" value="<?= e(old('email')) ?>" required>
+    </div>
+    <div class="mb-4">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <button type="submit" class="btn btn-gold w-100 py-2">Sign In</button>
+</form>
+<p class="text-center mt-4 divider-text"><a href="/">&larr; Back to storefront</a></p>

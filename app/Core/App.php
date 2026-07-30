@@ -27,8 +27,11 @@ final class App
         Response::securityHeaders();
 
         $router = new Router();
-        $registrar = require $this->basePath . '/routes/web.php';
-        $registrar($router);
+
+        foreach (['/routes/web.php', '/routes/admin.php'] as $routeFile) {
+            $registrar = require $this->basePath . $routeFile;
+            $registrar($router);
+        }
 
         $router->dispatch(new Request());
     }

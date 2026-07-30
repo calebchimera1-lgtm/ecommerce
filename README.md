@@ -10,9 +10,11 @@ inspired by Apple / Rolex / Louis Vuitton / Dior / Gucci — original design.
 
 This project is being built module by module. See
 [`docs/MODULE_1_ARCHITECTURE.md`](docs/MODULE_1_ARCHITECTURE.md) for the
-foundation (architecture, folder structure, database schema, config) and
+foundation (architecture, folder structure, database schema, config),
 [`docs/MODULE_2_AUTHENTICATION.md`](docs/MODULE_2_AUTHENTICATION.md) for
-customer authentication.
+customer authentication, and
+[`docs/MODULE_3_ADMIN_AUTH_RBAC.md`](docs/MODULE_3_ADMIN_AUTH_RBAC.md) for
+admin authentication and RBAC middleware.
 
 ## Tech stack
 
@@ -53,7 +55,7 @@ Being delivered module by module per the build plan. Completed so far:
 
 - [x] **Module 1** — Architecture, folder structure, full MySQL schema, config
 - [x] **Module 2** — Customer authentication (register/login/verify/reset/remember-me)
-- [ ] Module 3 — Admin authentication & RBAC middleware
+- [x] **Module 3** — Admin authentication & RBAC middleware
 - [ ] Module 4 — Product catalog (categories, brands, products, variants)
 - [ ] Module 5 — Storefront: home, shop, product details, search
 - [ ] Module 6 — Cart & wishlist
