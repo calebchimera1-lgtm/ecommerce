@@ -65,6 +65,7 @@ final class Session
         }
 
         session_destroy();
+        self::$started = false;
     }
 
     public static function set(string $key, mixed $value): void

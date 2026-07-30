@@ -23,11 +23,19 @@ final class Validator
     private function run(): void
     {
         foreach ($this->rules as $field => $ruleString) {
-            $rules = explode('|', $ruleString);
+            $ruleList = explode('|', $ruleString);
             $value = $this->data[$field] ?? null;
+            // min/max mean "numeric range" only when the field is also
+            // declared numeric/integer - otherwise they mean string
+            // length. Without this, a numeric-looking string like an
+            // all-digit password would be range-checked instead of
+            // length-checked (e.g. "1234567" as a number is < 8, so a
+            // naive is_numeric() check would wrongly accept a
+            // too-short password).
+            $isNumericField = in_array('numeric', $ruleList, true) || in_array('integer', $ruleList, true);
 
-            foreach ($rules as $rule) {
-                $this->applyRule($field, $value, $rule);
+            foreach ($ruleList as $rule) {
+                $this->applyRule($field, $value, $rule, $isNumericField);
             }
 
             if (!isset($this->errors[$field])) {
@@ -36,7 +44,7 @@ final class Validator
         }
     }
 
-    private function applyRule(string $field, mixed $value, string $rule): void
+    private function applyRule(string $field, mixed $value, string $rule, bool $isNumericField): void
     {
         [$name, $param] = array_pad(explode(':', $rule, 2), 2, null);
 
@@ -46,8 +54,8 @@ final class Validator
             'numeric' => $value !== null && $value !== '' && !is_numeric($value),
             'integer' => $value !== null && $value !== '' && filter_var($value, FILTER_VALIDATE_INT) === false,
             'alpha_num' => $value !== null && $value !== '' && !ctype_alnum((string) $value),
-            'min' => $value !== null && $value !== '' && (is_numeric($value) ? (float) $value < (float) $param : mb_strlen((string) $value) < (int) $param),
-            'max' => $value !== null && $value !== '' && (is_numeric($value) ? (float) $value > (float) $param : mb_strlen((string) $value) > (int) $param),
+            'min' => $value !== null && $value !== '' && ($isNumericField ? (float) $value < (float) $param : mb_strlen((string) $value) < (int) $param),
+            'max' => $value !== null && $value !== '' && ($isNumericField ? (float) $value > (float) $param : mb_strlen((string) $value) > (int) $param),
             'confirmed' => ($this->data[$field . '_confirmation'] ?? null) !== $value,
             'in' => $value !== null && $value !== '' && !in_array($value, explode(',', (string) $param), true),
             'unique' => $this->failsUnique($value, $param),

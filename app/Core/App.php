@@ -23,6 +23,7 @@ final class App
         $this->configureErrorHandling();
         date_default_timezone_set($this->config['app']['timezone']);
         Session::start();
+        Auth::attemptResumeFromCookie();
         Response::securityHeaders();
 
         $router = new Router();
