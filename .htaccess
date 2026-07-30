@@ -1,0 +1,12 @@
+# Safety net for deployments where the web server's document root was
+# mistakenly pointed at the project root instead of /public. Normal
+# setups should point DocumentRoot at /public and never hit this file.
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ public/$1 [L]
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+Options -Indexes

@@ -1,0 +1,40 @@
+## Environment
+.env
+.env.local
+.env.*.local
+
+## Dependencies
+/vendor/
+/node_modules/
+
+## Storage / runtime
+/storage/logs/*.log
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/sessions/*
+!/storage/sessions/.gitkeep
+
+## Uploads (keep folder, ignore uploaded content)
+/public/uploads/products/*
+!/public/uploads/products/.gitkeep
+/public/uploads/categories/*
+!/public/uploads/categories/.gitkeep
+/public/uploads/brands/*
+!/public/uploads/brands/.gitkeep
+/public/uploads/avatars/*
+!/public/uploads/avatars/.gitkeep
+/public/uploads/blog/*
+!/public/uploads/blog/.gitkeep
+
+## IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+## Composer
+composer.lock
+
+## Backups / dumps
+*.sql.bak
+*.zip
