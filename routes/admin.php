@@ -2,14 +2,19 @@
 
 declare(strict_types=1);
 
+use App\Controllers\Admin\AuditLogController;
 use App\Controllers\Admin\AuthController;
 use App\Controllers\Admin\BrandController;
 use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\CouponController;
+use App\Controllers\Admin\CustomerController;
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\OrderController;
 use App\Controllers\Admin\ProductController;
+use App\Controllers\Admin\ReviewController;
+use App\Controllers\Admin\RoleController;
 use App\Controllers\Admin\SettingsController;
+use App\Controllers\Admin\UserController;
 use App\Core\Response;
 use App\Core\Router;
 use App\Middleware\AdminMiddleware;
@@ -77,4 +82,29 @@ return function (Router $router): void {
     $router->get('/admin/orders/{id}', [OrderController::class, 'show'], $ordersViewPermission);
     $router->post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/orders/{id}/shipment', [OrderController::class, 'updateShipment'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/orders/{id}/payment', [OrderController::class, 'markPaid'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
+
+    $customersPermission = [[PermissionMiddleware::class, 'customers.manage']];
+    $router->get('/admin/customers', [CustomerController::class, 'index'], $customersPermission);
+    $router->get('/admin/customers/{id}', [CustomerController::class, 'show'], $customersPermission);
+    $router->post('/admin/customers/{id}/status', [CustomerController::class, 'updateStatus'], [...$customersPermission, VerifyCsrfMiddleware::class]);
+
+    $usersPermission = [[PermissionMiddleware::class, 'users.manage']];
+    $router->get('/admin/users', [UserController::class, 'index'], $usersPermission);
+    $router->get('/admin/users/create', [UserController::class, 'create'], $usersPermission);
+    $router->post('/admin/users', [UserController::class, 'store'], [...$usersPermission, VerifyCsrfMiddleware::class]);
+    $router->get('/admin/users/{id}/edit', [UserController::class, 'edit'], $usersPermission);
+    $router->post('/admin/users/{id}', [UserController::class, 'update'], [...$usersPermission, VerifyCsrfMiddleware::class]);
+
+    $rolesPermission = [[PermissionMiddleware::class, 'roles.manage']];
+    $router->get('/admin/roles', [RoleController::class, 'index'], $rolesPermission);
+    $router->get('/admin/roles/{id}/edit', [RoleController::class, 'edit'], $rolesPermission);
+    $router->post('/admin/roles/{id}/permissions', [RoleController::class, 'updatePermissions'], [...$rolesPermission, VerifyCsrfMiddleware::class]);
+
+    $reviewsPermission = [[PermissionMiddleware::class, 'reviews.manage']];
+    $router->get('/admin/reviews', [ReviewController::class, 'index'], $reviewsPermission);
+    $router->post('/admin/reviews/{id}/approve', [ReviewController::class, 'approve'], [...$reviewsPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/reviews/{id}/delete', [ReviewController::class, 'destroy'], [...$reviewsPermission, VerifyCsrfMiddleware::class]);
+
+    $router->get('/admin/audit-logs', [AuditLogController::class, 'index'], [[PermissionMiddleware::class, 'audit_logs.view']]);
 };

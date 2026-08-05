@@ -18,4 +18,23 @@ final class Payment extends Model
 
         return $row === false ? null : $row;
     }
+
+    /**
+     * Marks the most recent payment record for an order as completed
+     * (used for COD orders, where "paid" happens on delivery/collection
+     * rather than at checkout). No-op if the order has no payment row.
+     */
+    public static function markCompleted(int $orderId): void
+    {
+        $payment = self::forOrder($orderId);
+
+        if ($payment === null) {
+            return;
+        }
+
+        self::update((int) $payment['id'], [
+            'status' => 'completed',
+            'paid_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
 }

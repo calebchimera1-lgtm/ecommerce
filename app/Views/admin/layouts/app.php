@@ -16,6 +16,11 @@ $navItems = [
     ['label' => 'Categories', 'icon' => 'fa-sitemap', 'href' => '/admin/categories', 'permission' => 'categories.manage'],
     ['label' => 'Brands', 'icon' => 'fa-tags', 'href' => '/admin/brands', 'permission' => 'brands.manage'],
     ['label' => 'Coupons', 'icon' => 'fa-ticket', 'href' => '/admin/coupons', 'permission' => 'coupons.manage'],
+    ['label' => 'Customers', 'icon' => 'fa-users', 'href' => '/admin/customers', 'permission' => 'customers.manage'],
+    ['label' => 'Reviews', 'icon' => 'fa-star', 'href' => '/admin/reviews', 'permission' => 'reviews.manage'],
+    ['label' => 'Staff Users', 'icon' => 'fa-user-shield', 'href' => '/admin/users', 'permission' => 'users.manage'],
+    ['label' => 'Roles', 'icon' => 'fa-shield-halved', 'href' => '/admin/roles', 'permission' => 'roles.manage'],
+    ['label' => 'Audit Log', 'icon' => 'fa-clipboard-list', 'href' => '/admin/audit-logs', 'permission' => 'audit_logs.view'],
     ['label' => 'Settings', 'icon' => 'fa-gear', 'href' => '/admin/settings', 'permission' => 'settings.manage'],
 ];
 ?>

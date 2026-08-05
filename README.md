@@ -25,7 +25,9 @@ for checkout, orders, and payments, and
 [`docs/MODULE_8_CUSTOMER_DASHBOARD_ORDERS_REVIEWS.md`](docs/MODULE_8_CUSTOMER_DASHBOARD_ORDERS_REVIEWS.md)
 for the customer dashboard, order tracking, and reviews, and
 [`docs/MODULE_9_ADMIN_DASHBOARD_ANALYTICS.md`](docs/MODULE_9_ADMIN_DASHBOARD_ANALYTICS.md)
-for the admin dashboard and analytics.
+for the admin dashboard and analytics, and
+[`docs/MODULE_10_ADMIN_CATALOG_ORDER_CUSTOMER_MGMT.md`](docs/MODULE_10_ADMIN_CATALOG_ORDER_CUSTOMER_MGMT.md)
+for admin customer/staff/role/review management and the audit log.
 
 ## Tech stack
 
@@ -73,7 +75,7 @@ Being delivered module by module per the build plan. Completed so far:
 - [x] **Module 7** — Checkout, orders, payments (abstract gateway layer)
 - [x] **Module 8** — Customer dashboard, order history, tracking, reviews
 - [x] **Module 9** — Admin dashboard & analytics
-- [ ] Module 10 — Admin catalog/order/customer management
+- [x] **Module 10** — Admin catalog/order/customer management
 - [ ] Module 11 — Inventory, suppliers, purchase orders
 - [ ] Module 12 — Reports & exports (PDF/Excel/CSV)
 - [ ] Module 13 — Blog, testimonials, static pages, SEO, sitemap

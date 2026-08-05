@@ -9,6 +9,7 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
+use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\OrderAddress;
 use App\Models\OrderItem;
@@ -97,6 +98,21 @@ final class OrderController extends Controller
         ]);
 
         Session::flash('success', 'Shipment details updated.');
+        $this->redirect('/admin/orders/' . (int) $order['id']);
+    }
+
+    public function markPaid(Request $request): void
+    {
+        $order = $this->loadOrder($request);
+
+        if ($order['payment_status'] !== 'paid') {
+            Order::markPaid((int) $order['id']);
+            AuditLog::record(Auth::id(), 'order.payment_marked_paid', 'order', (int) $order['id'], [
+                'payment_status' => $order['payment_status'],
+            ], ['payment_status' => 'paid']);
+        }
+
+        Session::flash('success', 'Order marked as paid.');
         $this->redirect('/admin/orders/' . (int) $order['id']);
     }
 

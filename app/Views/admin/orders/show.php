@@ -57,6 +57,12 @@ $shipping = $addresses['shipping'] ?? null;
         <?php if ($payment !== null && $payment['transaction_id'] !== null): ?>
             <div class="d-flex justify-content-between"><span class="text-white-50">Transaction ID</span><span><?= e($payment['transaction_id']) ?></span></div>
         <?php endif; ?>
+        <?php if ($order['payment_status'] !== 'paid'): ?>
+            <form method="POST" action="/admin/orders/<?= (int) $order['id'] ?>/payment" class="mt-2" onsubmit="return confirm('Mark this order as paid?');">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-sm btn-outline-warning w-100">Mark as Paid</button>
+            </form>
+        <?php endif; ?>
     </div>
 </div>
 

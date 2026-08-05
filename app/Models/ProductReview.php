@@ -5,10 +5,67 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Core\Model;
+use PDO;
 
 final class ProductReview extends Model
 {
     protected static string $table = 'product_reviews';
+
+    /**
+     * @param array{status?:string} $filters status: 'pending'|'approved'|''
+     */
+    public static function paginateAdmin(int $page, int $perPage, array $filters = []): array
+    {
+        [$where, $bindings] = self::buildAdminFilterWhere($filters);
+        $offset = (max(1, $page) - 1) * $perPage;
+
+        $stmt = self::db()->prepare(
+            "SELECT pr.*, u.first_name, u.last_name, p.name AS product_name, p.slug AS product_slug
+             FROM product_reviews pr
+             JOIN users u ON u.id = pr.user_id
+             JOIN products p ON p.id = pr.product_id
+             {$where}
+             ORDER BY pr.created_at DESC
+             LIMIT :limit OFFSET :offset"
+        );
+
+        foreach ($bindings as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function countAdmin(array $filters = []): int
+    {
+        [$where, $bindings] = self::buildAdminFilterWhere($filters);
+        $stmt = self::db()->prepare("SELECT COUNT(*) AS total FROM product_reviews pr {$where}");
+        $stmt->execute($bindings);
+
+        return (int) $stmt->fetch()['total'];
+    }
+
+    private static function buildAdminFilterWhere(array $filters): array
+    {
+        if (($filters['status'] ?? '') === 'pending') {
+            return ['WHERE pr.is_approved = 0', []];
+        }
+
+        if (($filters['status'] ?? '') === 'approved') {
+            return ['WHERE pr.is_approved = 1', []];
+        }
+
+        return ['', []];
+    }
+
+    public static function approve(int $id): void
+    {
+        self::update($id, ['is_approved' => 1]);
+    }
 
     public static function approvedForProduct(int $productId): array
     {

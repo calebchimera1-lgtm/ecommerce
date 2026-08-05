@@ -94,6 +94,19 @@ final class Order extends Model
         ]);
     }
 
+    /**
+     * Marks an order's payment as collected - the admin-side
+     * counterpart to a COD delivery/collection, or manual reconciliation
+     * for a gateway payment that settled outside the app's webhook flow.
+     * Also flips the linked payment row (if any) to 'completed' so the
+     * two stay consistent.
+     */
+    public static function markPaid(int $orderId): void
+    {
+        self::update($orderId, ['payment_status' => 'paid']);
+        Payment::markCompleted($orderId);
+    }
+
     // -------------------------------------------------------------
     // Dashboard / analytics aggregates. "Sales" = gross order totals
     // regardless of payment status (bookings); "Revenue" = totals for

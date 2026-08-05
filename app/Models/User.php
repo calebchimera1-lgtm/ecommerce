@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Core\Model;
+use PDO;
 
 final class User extends Model
 {
@@ -13,6 +14,102 @@ final class User extends Model
     public static function findByEmail(string $email): ?array
     {
         return self::findBy('email', $email);
+    }
+
+    /**
+     * @param array{search?:string,status?:string} $filters
+     */
+    public static function paginateCustomers(int $page, int $perPage, array $filters = []): array
+    {
+        [$where, $bindings] = self::buildCustomerFilterWhere($filters);
+        $offset = (max(1, $page) - 1) * $perPage;
+
+        $stmt = self::db()->prepare(
+            "SELECT u.* FROM users u
+             JOIN roles r ON r.id = u.role_id
+             WHERE r.slug = 'customer' {$where}
+             ORDER BY u.created_at DESC
+             LIMIT :limit OFFSET :offset"
+        );
+
+        foreach ($bindings as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function countCustomersFiltered(array $filters = []): int
+    {
+        [$where, $bindings] = self::buildCustomerFilterWhere($filters);
+
+        $stmt = self::db()->prepare(
+            "SELECT COUNT(*) AS total FROM users u
+             JOIN roles r ON r.id = u.role_id
+             WHERE r.slug = 'customer' {$where}"
+        );
+        $stmt->execute($bindings);
+
+        return (int) $stmt->fetch()['total'];
+    }
+
+    private static function buildCustomerFilterWhere(array $filters): array
+    {
+        $conditions = [];
+        $bindings = [];
+
+        if (($filters['search'] ?? '') !== '') {
+            $conditions[] = '(u.first_name LIKE :search_name OR u.last_name LIKE :search_name OR u.email LIKE :search_email)';
+            $bindings['search_name'] = '%' . $filters['search'] . '%';
+            $bindings['search_email'] = '%' . $filters['search'] . '%';
+        }
+
+        if (($filters['status'] ?? '') !== '') {
+            $conditions[] = 'u.status = :status';
+            $bindings['status'] = $filters['status'];
+        }
+
+        return [$conditions === [] ? '' : ' AND ' . implode(' AND ', $conditions), $bindings];
+    }
+
+    /**
+     * Staff/admin accounts - every role except the 'customer' role.
+     */
+    public static function paginateStaff(int $page, int $perPage): array
+    {
+        $offset = (max(1, $page) - 1) * $perPage;
+        $stmt = self::db()->prepare(
+            "SELECT u.*, r.name AS role_name FROM users u
+             JOIN roles r ON r.id = u.role_id
+             WHERE r.slug != 'customer'
+             ORDER BY u.created_at DESC
+             LIMIT :limit OFFSET :offset"
+        );
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function countStaff(): int
+    {
+        $stmt = self::db()->query(
+            "SELECT COUNT(*) AS total FROM users u
+             JOIN roles r ON r.id = u.role_id
+             WHERE r.slug != 'customer'"
+        );
+
+        return (int) $stmt->fetch()['total'];
+    }
+
+    public static function updateStatus(int $id, string $status): void
+    {
+        self::update($id, ['status' => $status]);
     }
 
     public static function countCustomers(): int
