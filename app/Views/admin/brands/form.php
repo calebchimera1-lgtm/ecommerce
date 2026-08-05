@@ -22,6 +22,20 @@ $action = $isEdit ? '/admin/brands/' . (int) $brand['id'] : '/admin/brands';
             <label class="form-check-label" for="is_active">Active</label>
         </div>
     </div>
+    <div class="col-12">
+        <h6 class="text-white-50 small text-uppercase mt-2">SEO (optional)</h6>
+    </div>
+    <div class="col-12">
+        <label class="form-label" for="meta_title">Meta title</label>
+        <input type="text" class="form-control" id="meta_title" name="meta_title" maxlength="191"
+               placeholder="Defaults to the brand name"
+               value="<?= e($isEdit ? (string) ($brand['meta_title'] ?? '') : old('meta_title')) ?>">
+    </div>
+    <div class="col-12">
+        <label class="form-label" for="meta_description">Meta description</label>
+        <textarea class="form-control" id="meta_description" name="meta_description" rows="2" maxlength="255"
+                  placeholder="Defaults to the brand description"><?= e($isEdit ? (string) ($brand['meta_description'] ?? '') : old('meta_description')) ?></textarea>
+    </div>
     <div class="col-12 mt-4">
         <button type="submit" class="btn btn-gold"><?= $isEdit ? 'Save Changes' : 'Create Brand' ?></button>
         <a href="/admin/brands" class="btn btn-outline-light">Cancel</a>

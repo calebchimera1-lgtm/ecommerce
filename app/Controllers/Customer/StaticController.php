@@ -65,6 +65,13 @@ final class StaticController extends Controller
         ], 'customer/layouts/site');
     }
 
+    public function shippingReturns(Request $request): void
+    {
+        $this->view('customer/static/shipping-returns', [
+            'pageTitle' => 'Shipping & Returns | Kymera Collection',
+        ], 'customer/layouts/site');
+    }
+
     private static function nullable(mixed $value): ?string
     {
         $value = trim((string) $value);

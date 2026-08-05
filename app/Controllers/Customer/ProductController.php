@@ -52,8 +52,8 @@ final class ProductController extends Controller
         );
 
         $this->view('customer/product/show', [
-            'pageTitle' => $product['name'] . ' | Kymera Collection',
-            'metaDescription' => $product['short_description'] ?? mb_substr(strip_tags((string) $product['description']), 0, 160),
+            'pageTitle' => ($product['meta_title'] ?? $product['name']) . ' | Kymera Collection',
+            'metaDescription' => $product['meta_description'] ?? $product['short_description'] ?? mb_substr(strip_tags((string) $product['description']), 0, 160),
             'product' => $product,
             'images' => ProductImage::forProduct((int) $product['id']),
             'groupedAttributes' => $groupedAttributes,

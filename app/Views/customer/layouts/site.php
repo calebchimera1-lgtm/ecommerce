@@ -49,6 +49,9 @@ $cartItemCount = Cart::currentItemCount();
                             </div>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="/blog">Journal</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="/about">About</a>
                         </li>
                         <li class="nav-item">
@@ -115,11 +118,13 @@ $cartItemCount = Cart::currentItemCount();
                 <div class="col-6 col-lg-2">
                     <h6>Company</h6>
                     <a href="/about">About Us</a>
+                    <a href="/blog">Journal</a>
                     <a href="/contact">Contact</a>
                     <a href="/faqs">FAQs</a>
                 </div>
                 <div class="col-6 col-lg-2">
                     <h6>Legal</h6>
+                    <a href="/shipping-returns">Shipping &amp; Returns</a>
                     <a href="/privacy-policy">Privacy Policy</a>
                     <a href="/terms">Terms of Service</a>
                 </div>

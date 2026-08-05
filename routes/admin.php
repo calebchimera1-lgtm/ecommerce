@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Controllers\Admin\AuditLogController;
 use App\Controllers\Admin\AuthController;
+use App\Controllers\Admin\BlogCategoryController;
+use App\Controllers\Admin\BlogPostController;
 use App\Controllers\Admin\BrandController;
 use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\CouponController;
@@ -19,6 +21,7 @@ use App\Controllers\Admin\ReviewController;
 use App\Controllers\Admin\RoleController;
 use App\Controllers\Admin\SettingsController;
 use App\Controllers\Admin\SupplierController;
+use App\Controllers\Admin\TestimonialController;
 use App\Controllers\Admin\UserController;
 use App\Core\Response;
 use App\Core\Router;
@@ -148,4 +151,28 @@ return function (Router $router): void {
     $router->get('/admin/expenses/{id}/edit', [ExpenseController::class, 'edit'], $expensesPermission);
     $router->post('/admin/expenses/{id}', [ExpenseController::class, 'update'], [...$expensesPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/expenses/{id}/delete', [ExpenseController::class, 'destroy'], [...$expensesPermission, VerifyCsrfMiddleware::class]);
+
+    $blogPermission = [[PermissionMiddleware::class, 'blog.manage']];
+    $router->get('/admin/blog-categories', [BlogCategoryController::class, 'index'], $blogPermission);
+    $router->get('/admin/blog-categories/create', [BlogCategoryController::class, 'create'], $blogPermission);
+    $router->post('/admin/blog-categories', [BlogCategoryController::class, 'store'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+    $router->get('/admin/blog-categories/{id}/edit', [BlogCategoryController::class, 'edit'], $blogPermission);
+    $router->post('/admin/blog-categories/{id}', [BlogCategoryController::class, 'update'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/blog-categories/{id}/delete', [BlogCategoryController::class, 'destroy'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+
+    $router->get('/admin/blog-posts', [BlogPostController::class, 'index'], $blogPermission);
+    $router->get('/admin/blog-posts/create', [BlogPostController::class, 'create'], $blogPermission);
+    $router->post('/admin/blog-posts', [BlogPostController::class, 'store'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+    $router->get('/admin/blog-posts/{id}/edit', [BlogPostController::class, 'edit'], $blogPermission);
+    $router->post('/admin/blog-posts/{id}', [BlogPostController::class, 'update'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/blog-posts/{id}/delete', [BlogPostController::class, 'destroy'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/blog-posts/{id}/comments/{commentId}/approve', [BlogPostController::class, 'approveComment'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/blog-posts/{id}/comments/{commentId}/delete', [BlogPostController::class, 'destroyComment'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+
+    $router->get('/admin/testimonials', [TestimonialController::class, 'index'], $blogPermission);
+    $router->get('/admin/testimonials/create', [TestimonialController::class, 'create'], $blogPermission);
+    $router->post('/admin/testimonials', [TestimonialController::class, 'store'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+    $router->get('/admin/testimonials/{id}/edit', [TestimonialController::class, 'edit'], $blogPermission);
+    $router->post('/admin/testimonials/{id}', [TestimonialController::class, 'update'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/testimonials/{id}/delete', [TestimonialController::class, 'destroy'], [...$blogPermission, VerifyCsrfMiddleware::class]);
 };

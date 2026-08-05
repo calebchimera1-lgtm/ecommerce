@@ -1,10 +1,10 @@
 <?php
 $faqs = [
-    ['q' => 'How long does shipping take?', 'a' => 'Standard shipping typically takes 5-7 business days. Express and next-day options are available at checkout once the shipping module launches.'],
-    ['q' => 'What is your return policy?', 'a' => 'We accept returns within 30 days of delivery for unworn, unused items in original packaging.'],
+    ['q' => 'How long does shipping take?', 'a' => 'Standard shipping typically takes 5-7 business days. Express (2-3 days), Next-Day, and In-Store Pickup are also available at checkout.'],
+    ['q' => 'What is your return policy?', 'a' => 'We accept returns within 30 days of delivery for unworn, unused items in original packaging. See our Shipping & Returns page for details.'],
     ['q' => 'Are your products authentic?', 'a' => 'Yes. Every item in the Kymera Collection is sourced directly from the brand or an authorized partner.'],
     ['q' => 'Do you ship internationally?', 'a' => 'International shipping options are being finalized and will be announced soon.'],
-    ['q' => 'How do I track my order?', 'a' => 'Once order tracking launches, you will be able to follow your order in real time from your account dashboard.'],
+    ['q' => 'How do I track my order?', 'a' => 'Sign in and visit My Orders in your account dashboard to see real-time status and tracking for every order.'],
 ];
 ?>
 <section class="section">

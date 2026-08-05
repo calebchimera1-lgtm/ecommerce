@@ -114,6 +114,8 @@ final class ProductController extends Controller
                 'low_stock_threshold' => self::nullableInt($request->input('low_stock_threshold')) ?? 5,
                 'is_featured' => $request->input('is_featured') !== null ? 1 : 0,
                 'is_active' => $request->input('is_active') !== null ? 1 : 0,
+                'meta_title' => self::nullable($request->input('meta_title')),
+                'meta_description' => self::nullable($request->input('meta_description')),
             ]);
         } catch (PDOException) {
             Session::flash('errors', ['name' => ['Could not save the product. Please check the form and try again.']]);
@@ -227,6 +229,8 @@ final class ProductController extends Controller
             'low_stock_threshold' => self::nullableInt($request->input('low_stock_threshold')) ?? 5,
             'is_featured' => $request->input('is_featured') !== null ? 1 : 0,
             'is_active' => $request->input('is_active') !== null ? 1 : 0,
+            'meta_title' => self::nullable($request->input('meta_title')),
+            'meta_description' => self::nullable($request->input('meta_description')),
         ]);
 
         self::saveAttributes($id, $request);

@@ -266,6 +266,20 @@ final class Product extends Model
     }
 
     /**
+     * Every active, non-deleted product's slug and last-modified
+     * timestamp - the sitemap's data source (deliberately minimal
+     * columns, since a sitemap doesn't need full product rows).
+     */
+    public static function allActiveForSitemap(): array
+    {
+        $stmt = self::db()->query(
+            'SELECT slug, updated_at FROM products WHERE deleted_at IS NULL AND is_active = 1'
+        );
+
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Minimal id/name/sku list for purchase order line-item dropdowns -
      * every non-deleted product, active or not (a discontinued-but-not-
      * deleted product can still be legitimately restocked to sell

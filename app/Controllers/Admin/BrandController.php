@@ -38,6 +38,8 @@ final class BrandController extends Controller
             'slug' => Brand::generateSlug($data['name']),
             'description' => self::nullable($request->input('description')),
             'is_active' => $request->input('is_active') !== null ? 1 : 0,
+            'meta_title' => self::nullable($request->input('meta_title')),
+            'meta_description' => self::nullable($request->input('meta_description')),
         ]);
 
         Session::flash('success', 'Brand created.');
@@ -81,6 +83,8 @@ final class BrandController extends Controller
             'slug' => $slug,
             'description' => self::nullable($request->input('description')),
             'is_active' => $request->input('is_active') !== null ? 1 : 0,
+            'meta_title' => self::nullable($request->input('meta_title')),
+            'meta_description' => self::nullable($request->input('meta_description')),
         ]);
 
         Session::flash('success', 'Brand updated.');

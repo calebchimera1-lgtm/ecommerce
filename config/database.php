@@ -15,6 +15,11 @@ return [
     'password' => Env::get('DB_PASSWORD', ''),
     'charset' => Env::get('DB_CHARSET', 'utf8mb4'),
     'collation' => 'utf8mb4_unicode_ci',
+    // Read directly from Env (not config/config.php's merged 'app.timezone')
+    // so Database.php - which only ever loads this file - can align
+    // MySQL's session clock with PHP's without pulling in the whole
+    // app config.
+    'timezone' => Env::get('APP_TIMEZONE', 'UTC'),
     'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

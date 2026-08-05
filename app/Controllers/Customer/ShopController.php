@@ -70,8 +70,11 @@ final class ShopController extends Controller
             'max_price' => (string) $request->query('max_price', ''),
         ];
 
+        $metaSource = $activeCategory ?? $activeBrand;
+
         $this->view('customer/shop/index', [
-            'pageTitle' => $heading . ' | Kymera Collection',
+            'pageTitle' => (($metaSource['meta_title'] ?? null) ?: $heading) . ' | Kymera Collection',
+            'metaDescription' => $metaSource['meta_description'] ?? $metaSource['description'] ?? null,
             'heading' => $heading,
             'products' => Product::publicPaginate($page, self::PER_PAGE, $filters, $sort),
             'categories' => Category::activeOrdered(),

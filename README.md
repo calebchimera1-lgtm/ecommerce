@@ -31,7 +31,9 @@ for admin customer/staff/role/review management and the audit log, and
 [`docs/MODULE_11_INVENTORY_SUPPLIERS_PURCHASE_ORDERS.md`](docs/MODULE_11_INVENTORY_SUPPLIERS_PURCHASE_ORDERS.md)
 for inventory, suppliers, and purchase orders, and
 [`docs/MODULE_12_REPORTS_EXPORTS_EXPENSES.md`](docs/MODULE_12_REPORTS_EXPORTS_EXPENSES.md)
-for reports, CSV/Excel/PDF exports, and expense management.
+for reports, CSV/Excel/PDF exports, and expense management, and
+[`docs/MODULE_13_BLOG_TESTIMONIALS_STATIC_SEO_SITEMAP.md`](docs/MODULE_13_BLOG_TESTIMONIALS_STATIC_SEO_SITEMAP.md)
+for the blog, testimonials, static pages, SEO, and sitemap.
 
 ## Tech stack
 
@@ -82,7 +84,7 @@ Being delivered module by module per the build plan. Completed so far:
 - [x] **Module 10** — Admin catalog/order/customer management
 - [x] **Module 11** — Inventory, suppliers, purchase orders
 - [x] **Module 12** — Reports & exports (PDF/Excel/CSV), expense management
-- [ ] Module 13 — Blog, testimonials, static pages, SEO, sitemap
+- [x] **Module 13** — Blog, testimonials, static pages, SEO, sitemap
 - [ ] Module 14 — Security hardening pass & final QA
 
 See the repo's task list / commit history for progress on each.

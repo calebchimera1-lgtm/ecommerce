@@ -190,6 +190,22 @@ $field = static function (string $key, mixed $default = '') use ($isEdit, $produ
         <input type="file" class="form-control" id="images" name="images[]" accept="image/jpeg,image/png,image/webp" multiple>
     </div>
 
+    <h6 class="text-white-50 mb-3">SEO (optional)</h6>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label class="form-label" for="meta_title">Meta title</label>
+            <input type="text" class="form-control" id="meta_title" name="meta_title" maxlength="191"
+                   placeholder="Defaults to the product name"
+                   value="<?= e((string) $field('meta_title')) ?>">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="meta_description">Meta description</label>
+            <input type="text" class="form-control" id="meta_description" name="meta_description" maxlength="255"
+                   placeholder="Defaults to the short description"
+                   value="<?= e((string) $field('meta_description')) ?>">
+        </div>
+    </div>
+
     <button type="submit" class="btn btn-gold"><?= $isEdit ? 'Save Changes' : 'Create Product' ?></button>
     <a href="/admin/products" class="btn btn-outline-light">Cancel</a>
 </form>

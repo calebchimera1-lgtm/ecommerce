@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\Customer\AddressController;
 use App\Controllers\Customer\AuthController;
+use App\Controllers\Customer\BlogController;
 use App\Controllers\Customer\CartController;
 use App\Controllers\Customer\CheckoutController;
 use App\Controllers\Customer\DashboardController;
@@ -14,6 +15,7 @@ use App\Controllers\Customer\ProductController;
 use App\Controllers\Customer\ProfileController;
 use App\Controllers\Customer\ReviewController;
 use App\Controllers\Customer\ShopController;
+use App\Controllers\Customer\SitemapController;
 use App\Controllers\Customer\StaticController;
 use App\Controllers\Customer\WishlistController;
 use App\Core\Router;
@@ -68,6 +70,20 @@ return function (Router $router): void {
     $router->get('/faqs', [StaticController::class, 'faqs']);
     $router->get('/privacy-policy', [StaticController::class, 'privacy']);
     $router->get('/terms', [StaticController::class, 'terms']);
+    $router->get('/shipping-returns', [StaticController::class, 'shippingReturns']);
+
+    // Blog ("Journal"). /blog/category/{slug} and /blog/{slug} are both
+    // GET single-segment-under-/blog patterns, so category must be
+    // registered first - the router matches in registration order, and
+    // /blog/category would otherwise be swallowed by /blog/{slug} with
+    // slug="category".
+    $router->get('/blog', [BlogController::class, 'index']);
+    $router->get('/blog/category/{slug}', [BlogController::class, 'category']);
+    $router->get('/blog/{slug}', [BlogController::class, 'show']);
+    $router->post('/blog/{slug}/comments', [BlogController::class, 'storeComment'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    $router->get('/sitemap.xml', [SitemapController::class, 'index']);
+    $router->get('/robots.txt', [SitemapController::class, 'robots']);
 
     $router->post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'], [VerifyCsrfMiddleware::class]);
 

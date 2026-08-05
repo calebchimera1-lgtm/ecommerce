@@ -48,6 +48,8 @@ final class CategoryController extends Controller
             'description' => self::nullable($request->input('description')),
             'is_active' => $request->input('is_active') !== null ? 1 : 0,
             'sort_order' => self::nullableInt($request->input('sort_order')) ?? 0,
+            'meta_title' => self::nullable($request->input('meta_title')),
+            'meta_description' => self::nullable($request->input('meta_description')),
         ]);
 
         Session::flash('success', 'Category created.');
@@ -114,6 +116,8 @@ final class CategoryController extends Controller
             'description' => self::nullable($request->input('description')),
             'is_active' => $request->input('is_active') !== null ? 1 : 0,
             'sort_order' => self::nullableInt($request->input('sort_order')) ?? 0,
+            'meta_title' => self::nullable($request->input('meta_title')),
+            'meta_description' => self::nullable($request->input('meta_description')),
         ]);
 
         Session::flash('success', 'Category updated.');
