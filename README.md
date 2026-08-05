@@ -112,5 +112,7 @@ payouts):
 - [x] **Module 16** — Vendor registration, approval & dashboard shell
       (public application form, admin approval queue, vendor
       self-service profile)
-- [ ] Module 17 — Vendor product management & listing approval
+- [x] **Module 17** — Vendor product management & listing approval
+      (vendor product CRUD, admin approval queue built into the
+      existing product list, commission rate shown per category)
 - [ ] Module 18 — Order splitting, commission & payouts

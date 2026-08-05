@@ -7,12 +7,14 @@ namespace App\Controllers\Vendor;
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Request;
+use App\Models\Product;
 use App\Models\Vendor;
 
 /**
- * Placeholder landing page, the vendor-side counterpart to Module 3's
- * original admin dashboard placeholder - real content (product
- * management, sales, payouts) arrives in Modules 16-18.
+ * Vendor landing page. Module 15 shipped this as a placeholder before
+ * there was anything vendor-specific to show; Module 17 gives it real
+ * product-approval stats now that vendors have listings. Sales and
+ * payout figures arrive in Module 18.
  */
 final class DashboardController extends Controller
 {
@@ -23,6 +25,7 @@ final class DashboardController extends Controller
         $this->view('vendor/dashboard/index', [
             'pageTitle' => 'Vendor Dashboard | Kymera Collection',
             'vendor' => $vendor,
+            'productCounts' => Product::statusCountsForVendor((int) $vendor['id']),
         ], 'vendor/layouts/app');
     }
 }

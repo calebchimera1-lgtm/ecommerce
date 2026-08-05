@@ -238,6 +238,7 @@ CREATE TABLE `products` (
     `is_featured`       TINYINT(1)   NOT NULL DEFAULT 0,
     `is_active`         TINYINT(1)   NOT NULL DEFAULT 1,
     `approval_status`   ENUM('approved','pending','rejected') NOT NULL DEFAULT 'approved' COMMENT 'Platform-owned products are always approved; only vendor-submitted listings go through pending/rejected',
+    `rejection_reason`  VARCHAR(255) NULL,
     `view_count`        INT UNSIGNED NOT NULL DEFAULT 0,
     `meta_title`        VARCHAR(191) NULL,
     `meta_description`  VARCHAR(255) NULL,

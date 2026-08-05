@@ -76,6 +76,8 @@ return function (Router $router): void {
     $router->post('/admin/products/{id}/delete', [ProductController::class, 'destroy'], [...$productsPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/products/{id}/images/{imageId}/delete', [ProductController::class, 'deleteImage'], [...$productsPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/products/{id}/images/{imageId}/primary', [ProductController::class, 'setPrimaryImage'], [...$productsPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/products/{id}/approve', [ProductController::class, 'approve'], [...$productsPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/products/{id}/reject', [ProductController::class, 'reject'], [...$productsPermission, VerifyCsrfMiddleware::class]);
 
     $couponsPermission = [[PermissionMiddleware::class, 'coupons.manage']];
     $router->get('/admin/coupons', [CouponController::class, 'index'], $couponsPermission);

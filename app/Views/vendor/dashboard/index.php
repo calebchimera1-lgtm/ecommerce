@@ -1,4 +1,4 @@
-<?php /** @var array $vendor */ ?>
+<?php /** @var array $vendor @var array $productCounts */ ?>
 <h4 class="mb-1" style="color:#f8f7f4;">Welcome back, <?= e($vendor['store_name']) ?>.</h4>
 <p class="text-white-50 mb-4">Your vendor account has been active since <?= e(date('F j, Y', strtotime($vendor['approved_at'] ?? $vendor['created_at']))) ?>.</p>
 
@@ -11,21 +11,33 @@
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-tile">
-            <div class="stat-label">Store Slug</div>
-            <div class="stat-value" style="font-size:1rem;"><?= e($vendor['slug']) ?></div>
+            <div class="stat-label">Live Products</div>
+            <div class="stat-value text-success"><?= (int) $productCounts['approved'] ?></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-tile">
+            <div class="stat-label">Pending Review</div>
+            <div class="stat-value text-warning"><?= (int) $productCounts['pending'] ?></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-tile">
+            <div class="stat-label">Rejected</div>
+            <div class="stat-value text-danger"><?= (int) $productCounts['rejected'] ?></div>
         </div>
     </div>
 </div>
 
 <div class="chart-card">
     <p class="text-white-50 mb-2">
-        Product management, order fulfillment, and payout tracking for your store are on the way in the
-        next release.
+        Manage your listings from <a href="/vendor/products" class="text-warning">My Products</a> - new
+        listings and edits are reviewed by our team before they go live on the storefront.
     </p>
     <p class="text-white-50 mb-0">
-        In the meantime, keep your <a href="/vendor/profile" class="text-warning">Store Profile</a> up to
-        date - your store name, description, logo, and payout details are what customers and our team will
-        see once product listings go live.
+        Order fulfillment and payout tracking for your store are on the way in the next release. In the
+        meantime, keep your <a href="/vendor/profile" class="text-warning">Store Profile</a> up to date -
+        your store name, description, logo, and payout details are what customers and our team will see.
     </p>
 </div>
 

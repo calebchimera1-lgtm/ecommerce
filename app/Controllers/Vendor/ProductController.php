@@ -2,68 +2,75 @@
 
 declare(strict_types=1);
 
-namespace App\Controllers\Admin;
+namespace App\Controllers\Vendor;
 
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
-use App\Models\AuditLog;
-use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductAttribute;
 use App\Models\ProductImage;
-use App\Models\Supplier;
+use App\Models\Setting;
 use App\Models\Vendor;
-use App\Services\Notification\Mailer;
 use App\Services\Upload\ImageUploader;
 use PDOException;
 use RuntimeException;
 
+/**
+ * A vendor's own product catalog - every query and mutation here is
+ * scoped to the logged-in vendor's own vendor_id, via
+ * Product::findForVendor()/paginateForVendor(), so there is no code
+ * path by which a vendor can read or modify another vendor's listing.
+ *
+ * Every create or content edit forces approval_status back to
+ * 'pending' - Module 15's decision that vendor listings need admin
+ * approval before going live means a listing a vendor has changed is,
+ * by definition, unreviewed content again. The one exception is
+ * restock() (stock_quantity only), a separate fast path for the
+ * routine daily task of updating stock without pulling an
+ * already-approved listing back into the review queue.
+ */
 final class ProductController extends Controller
 {
     private const PER_PAGE = 20;
 
     public function index(Request $request): void
     {
+        $vendor = self::currentVendor();
         $page = max(1, (int) $request->query('page', 1));
         $filters = [
             'search' => trim((string) $request->query('search', '')),
-            'category_id' => (string) $request->query('category_id', ''),
-            'brand_id' => (string) $request->query('brand_id', ''),
             'approval_status' => (string) $request->query('approval_status', ''),
         ];
 
-        $this->view('admin/products/index', [
-            'pageTitle' => 'Products | Kymera Collection Admin',
-            'products' => Product::paginateWithFilters($page, self::PER_PAGE, $filters),
-            'categories' => Category::tree(),
-            'brands' => Brand::all('name', 'ASC'),
+        $this->view('vendor/products/index', [
+            'pageTitle' => 'My Products | Kymera Collection Vendor Portal',
+            'products' => Product::paginateForVendor((int) $vendor['id'], $page, self::PER_PAGE, $filters),
             'filters' => $filters,
             'page' => $page,
             'perPage' => self::PER_PAGE,
-            'total' => Product::countWithFilters($filters),
-        ], 'admin/layouts/app');
+            'total' => Product::countForVendor((int) $vendor['id'], $filters),
+        ], 'vendor/layouts/app');
     }
 
     public function create(Request $request): void
     {
-        $this->view('admin/products/form', [
-            'pageTitle' => 'New Product | Kymera Collection Admin',
+        $this->view('vendor/products/form', [
+            'pageTitle' => 'New Product | Kymera Collection Vendor Portal',
             'product' => null,
             'images' => [],
             'attributes' => [],
             'specifications' => [],
-            'categories' => Category::tree(),
-            'brands' => Brand::all('name', 'ASC'),
-            'suppliers' => Supplier::active(),
-        ], 'admin/layouts/app');
+            'categories' => self::categoriesWithCommission(),
+        ], 'vendor/layouts/app');
     }
 
     public function store(Request $request): void
     {
+        $vendor = self::currentVendor();
         $data = $this->validate($request->all(), [
             'name' => 'required|max:200',
             'category_id' => 'required|integer',
@@ -76,26 +83,12 @@ final class ProductController extends Controller
             $this->back();
         }
 
-        $brandId = self::nullableInt($request->input('brand_id'));
-
-        if ($brandId !== null && Brand::find($brandId) === null) {
-            Session::flash('errors', ['brand_id' => ['Selected brand does not exist.']]);
-            $this->back();
-        }
-
         $sku = trim((string) $request->input('sku', ''));
 
         if ($sku === '') {
             $sku = Product::generateSku();
         } elseif (Product::findBy('sku', $sku) !== null) {
             Session::flash('errors', ['sku' => ['This SKU is already in use.']]);
-            $this->back();
-        }
-
-        $supplierId = self::nullableInt($request->input('supplier_id'));
-
-        if ($supplierId !== null && Supplier::find($supplierId) === null) {
-            Session::flash('errors', ['supplier_id' => ['Selected supplier does not exist.']]);
             $this->back();
         }
 
@@ -106,8 +99,9 @@ final class ProductController extends Controller
                 'name' => $data['name'],
                 'slug' => Product::generateSlug($data['name']),
                 'category_id' => (int) $data['category_id'],
-                'brand_id' => $brandId,
-                'supplier_id' => $supplierId,
+                'brand_id' => null,
+                'supplier_id' => null,
+                'vendor_id' => (int) $vendor['id'],
                 'short_description' => self::nullable($request->input('short_description')),
                 'description' => self::nullable($request->input('description')),
                 'specifications' => self::buildSpecifications($request),
@@ -117,8 +111,9 @@ final class ProductController extends Controller
                 'weight_grams' => self::nullableInt($request->input('weight_grams')),
                 'stock_quantity' => (int) $data['stock_quantity'],
                 'low_stock_threshold' => self::nullableInt($request->input('low_stock_threshold')) ?? 5,
-                'is_featured' => $request->input('is_featured') !== null ? 1 : 0,
+                'is_featured' => 0,
                 'is_active' => $request->input('is_active') !== null ? 1 : 0,
+                'approval_status' => 'pending',
                 'meta_title' => self::nullable($request->input('meta_title')),
                 'meta_description' => self::nullable($request->input('meta_description')),
             ]);
@@ -135,39 +130,30 @@ final class ProductController extends Controller
             Session::flash('errors', ['images' => [$e->getMessage()]]);
         }
 
-        Session::flash('success', 'Product created.');
-        $this->redirect('/admin/products/' . $productId . '/edit');
+        Session::flash('success', 'Product submitted for review. It will appear on the storefront once approved.');
+        $this->redirect('/vendor/products/' . $productId . '/edit');
     }
 
     public function edit(Request $request): void
     {
-        $id = (int) $request->route('id');
-        $product = Product::findWithRelations($id);
+        $vendor = self::currentVendor();
+        $product = self::loadOwnProduct($request, $vendor);
 
-        if ($product === null) {
-            Response::abort(404, 'Product not found.');
-        }
-
-        $this->view('admin/products/form', [
-            'pageTitle' => 'Edit Product | Kymera Collection Admin',
+        $this->view('vendor/products/form', [
+            'pageTitle' => 'Edit Product | Kymera Collection Vendor Portal',
             'product' => $product,
-            'images' => ProductImage::forProduct($id),
-            'attributes' => ProductAttribute::forProduct($id),
+            'images' => ProductImage::forProduct((int) $product['id']),
+            'attributes' => ProductAttribute::forProduct((int) $product['id']),
             'specifications' => $product['specifications'] !== null ? (json_decode($product['specifications'], true) ?? []) : [],
-            'categories' => Category::tree(),
-            'brands' => Brand::all('name', 'ASC'),
-            'suppliers' => Supplier::active(),
-        ], 'admin/layouts/app');
+            'categories' => self::categoriesWithCommission(),
+        ], 'vendor/layouts/app');
     }
 
     public function update(Request $request): void
     {
-        $id = (int) $request->route('id');
-        $product = Product::find($id);
-
-        if ($product === null || $product['deleted_at'] !== null) {
-            Response::abort(404, 'Product not found.');
-        }
+        $vendor = self::currentVendor();
+        $product = self::loadOwnProduct($request, $vendor);
+        $id = (int) $product['id'];
 
         $data = $this->validate($request->all(), [
             'name' => 'required|max:200',
@@ -178,13 +164,6 @@ final class ProductController extends Controller
 
         if (Category::find((int) $data['category_id']) === null) {
             Session::flash('errors', ['category_id' => ['Selected category does not exist.']]);
-            $this->back();
-        }
-
-        $brandId = self::nullableInt($request->input('brand_id'));
-
-        if ($brandId !== null && Brand::find($brandId) === null) {
-            Session::flash('errors', ['brand_id' => ['Selected brand does not exist.']]);
             $this->back();
         }
 
@@ -208,21 +187,12 @@ final class ProductController extends Controller
             $slug = Product::generateSlug($data['name'], $id);
         }
 
-        $supplierId = self::nullableInt($request->input('supplier_id'));
-
-        if ($supplierId !== null && Supplier::find($supplierId) === null) {
-            Session::flash('errors', ['supplier_id' => ['Selected supplier does not exist.']]);
-            $this->back();
-        }
-
         Product::update($id, [
             'sku' => $sku,
             'barcode' => self::nullable($request->input('barcode')),
             'name' => $data['name'],
             'slug' => $slug,
             'category_id' => (int) $data['category_id'],
-            'brand_id' => $brandId,
-            'supplier_id' => $supplierId,
             'short_description' => self::nullable($request->input('short_description')),
             'description' => self::nullable($request->input('description')),
             'specifications' => self::buildSpecifications($request),
@@ -232,8 +202,9 @@ final class ProductController extends Controller
             'weight_grams' => self::nullableInt($request->input('weight_grams')),
             'stock_quantity' => (int) $data['stock_quantity'],
             'low_stock_threshold' => self::nullableInt($request->input('low_stock_threshold')) ?? 5,
-            'is_featured' => $request->input('is_featured') !== null ? 1 : 0,
             'is_active' => $request->input('is_active') !== null ? 1 : 0,
+            'approval_status' => 'pending',
+            'rejection_reason' => null,
             'meta_title' => self::nullable($request->input('meta_title')),
             'meta_description' => self::nullable($request->input('meta_description')),
         ]);
@@ -246,113 +217,109 @@ final class ProductController extends Controller
             Session::flash('errors', ['images' => [$e->getMessage()]]);
         }
 
-        Session::flash('success', 'Product updated.');
-        $this->redirect('/admin/products/' . $id . '/edit');
+        Session::flash('success', 'Product updated and resubmitted for review.');
+        $this->redirect('/vendor/products/' . $id . '/edit');
+    }
+
+    /**
+     * Stock-only update - deliberately the one product mutation that
+     * does NOT reset approval_status, so a vendor can keep an
+     * already-approved listing's stock count current without pulling
+     * it back into the admin review queue every time inventory moves.
+     */
+    public function restock(Request $request): void
+    {
+        $vendor = self::currentVendor();
+        $product = self::loadOwnProduct($request, $vendor);
+
+        $data = $this->validate($request->all(), ['stock_quantity' => 'required|integer']);
+        Product::update((int) $product['id'], ['stock_quantity' => (int) $data['stock_quantity']]);
+
+        Session::flash('success', 'Stock updated.');
+        $this->redirect('/vendor/products');
     }
 
     public function destroy(Request $request): void
     {
-        $id = (int) $request->route('id');
-        Product::softDelete($id);
+        $vendor = self::currentVendor();
+        $product = self::loadOwnProduct($request, $vendor);
+
+        Product::softDelete((int) $product['id']);
         Session::flash('success', 'Product deleted.');
-        $this->redirect('/admin/products');
-    }
-
-    /**
-     * Approving/rejecting is only meaningful for vendor-submitted
-     * listings (vendor_id NOT NULL) - platform-owned products are
-     * created already approved and never enter this queue.
-     */
-    public function approve(Request $request): void
-    {
-        $product = self::loadVendorProduct($request);
-
-        if (!in_array($product['approval_status'], ['pending', 'rejected'], true)) {
-            Session::flash('errors', ['approval_status' => ['Only pending or rejected listings can be approved.']]);
-            $this->redirect('/admin/products/' . (int) $product['id'] . '/edit');
-        }
-
-        Product::approveListing((int) $product['id']);
-        AuditLog::record(Auth::id(), 'product.approved', 'product', (int) $product['id'], ['approval_status' => $product['approval_status']], ['approval_status' => 'approved']);
-        self::notifyVendor($product, 'product-approved', 'Your listing on Kymera Collection was approved');
-
-        Session::flash('success', 'Product approved.');
-        $this->redirect('/admin/products/' . (int) $product['id'] . '/edit');
-    }
-
-    public function reject(Request $request): void
-    {
-        $product = self::loadVendorProduct($request);
-
-        if ($product['approval_status'] !== 'pending') {
-            Session::flash('errors', ['approval_status' => ['Only pending listings can be rejected.']]);
-            $this->redirect('/admin/products/' . (int) $product['id'] . '/edit');
-        }
-
-        $data = $this->validate($request->all(), ['rejection_reason' => 'required|max:255']);
-        Product::rejectListing((int) $product['id'], $data['rejection_reason']);
-        AuditLog::record(Auth::id(), 'product.rejected', 'product', (int) $product['id'], ['approval_status' => $product['approval_status']], ['approval_status' => 'rejected', 'reason' => $data['rejection_reason']]);
-        self::notifyVendor($product, 'product-rejected', 'Your listing on Kymera Collection needs changes', ['reason' => $data['rejection_reason']]);
-
-        Session::flash('success', 'Product rejected.');
-        $this->redirect('/admin/products/' . (int) $product['id'] . '/edit');
-    }
-
-    private static function loadVendorProduct(Request $request): array
-    {
-        $id = (int) $request->route('id');
-        $product = Product::find($id);
-
-        if ($product === null || $product['deleted_at'] !== null || $product['vendor_id'] === null) {
-            Response::abort(404, 'Vendor product not found.');
-        }
-
-        return $product;
-    }
-
-    private static function notifyVendor(array $product, string $view, string $subject, array $extra = []): void
-    {
-        $vendor = Vendor::findWithUser((int) $product['vendor_id']);
-
-        if ($vendor === null) {
-            return;
-        }
-
-        Mailer::send($vendor['email'], $subject, $view, array_merge([
-            'name' => $vendor['first_name'],
-            'productName' => $product['name'],
-            'productUrl' => url('/vendor/products/' . (int) $product['id'] . '/edit'),
-        ], $extra));
+        $this->redirect('/vendor/products');
     }
 
     public function deleteImage(Request $request): void
     {
-        $productId = (int) $request->route('id');
+        $vendor = self::currentVendor();
+        $product = self::loadOwnProduct($request, $vendor);
         $imageId = (int) $request->route('imageId');
         $image = ProductImage::find($imageId);
 
-        if ($image !== null && (int) $image['product_id'] === $productId) {
+        if ($image !== null && (int) $image['product_id'] === (int) $product['id']) {
             ImageUploader::delete($image['image_path']);
             ProductImage::delete($imageId);
         }
 
         Session::flash('success', 'Image removed.');
-        $this->redirect('/admin/products/' . $productId . '/edit');
+        $this->redirect('/vendor/products/' . (int) $product['id'] . '/edit');
     }
 
     public function setPrimaryImage(Request $request): void
     {
-        $productId = (int) $request->route('id');
+        $vendor = self::currentVendor();
+        $product = self::loadOwnProduct($request, $vendor);
         $imageId = (int) $request->route('imageId');
         $image = ProductImage::find($imageId);
 
-        if ($image !== null && (int) $image['product_id'] === $productId) {
-            ProductImage::clearPrimary($productId);
+        if ($image !== null && (int) $image['product_id'] === (int) $product['id']) {
+            ProductImage::clearPrimary((int) $product['id']);
             ProductImage::update($imageId, ['is_primary' => 1]);
         }
 
         Session::flash('success', 'Primary image updated.');
-        $this->redirect('/admin/products/' . $productId . '/edit');
+        $this->redirect('/vendor/products/' . (int) $product['id'] . '/edit');
+    }
+
+    private static function currentVendor(): array
+    {
+        $vendor = Vendor::findByUserId((int) Auth::id());
+
+        if ($vendor === null) {
+            Response::abort(403, 'No vendor profile is linked to this account.');
+        }
+
+        return $vendor;
+    }
+
+    private static function loadOwnProduct(Request $request, array $vendor): array
+    {
+        $product = Product::findForVendor((int) $request->route('id'), (int) $vendor['id']);
+
+        if ($product === null) {
+            Response::abort(404, 'Product not found.');
+        }
+
+        return $product;
+    }
+
+    /**
+     * Category rows annotated with the commission rate that will
+     * apply if a product is listed under them - the category's own
+     * rate if set, otherwise the platform-wide default - so a vendor
+     * can see their cut before choosing where to list.
+     */
+    private static function categoriesWithCommission(): array
+    {
+        $defaultRate = (float) Setting::get('default_commission_rate', 15.00);
+
+        return array_map(static function (array $category) use ($defaultRate): array {
+            $category['effective_commission_rate'] = $category['commission_rate'] !== null
+                ? (float) $category['commission_rate']
+                : $defaultRate;
+
+            return $category;
+        }, Category::tree());
     }
 
     private static function buildSpecifications(Request $request): ?string

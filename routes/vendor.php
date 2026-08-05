@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\Vendor\AuthController;
 use App\Controllers\Vendor\DashboardController;
+use App\Controllers\Vendor\ProductController;
 use App\Controllers\Vendor\ProfileController;
 use App\Core\Response;
 use App\Core\Router;
@@ -32,4 +33,14 @@ return function (Router $router): void {
 
     $router->get('/vendor/profile', [ProfileController::class, 'index'], [VendorMiddleware::class]);
     $router->post('/vendor/profile', [ProfileController::class, 'update'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    $router->get('/vendor/products', [ProductController::class, 'index'], [VendorMiddleware::class]);
+    $router->get('/vendor/products/create', [ProductController::class, 'create'], [VendorMiddleware::class]);
+    $router->post('/vendor/products', [ProductController::class, 'store'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->get('/vendor/products/{id}/edit', [ProductController::class, 'edit'], [VendorMiddleware::class]);
+    $router->post('/vendor/products/{id}', [ProductController::class, 'update'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/vendor/products/{id}/restock', [ProductController::class, 'restock'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/vendor/products/{id}/delete', [ProductController::class, 'destroy'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/vendor/products/{id}/images/{imageId}/delete', [ProductController::class, 'deleteImage'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/vendor/products/{id}/images/{imageId}/primary', [ProductController::class, 'setPrimaryImage'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
 };

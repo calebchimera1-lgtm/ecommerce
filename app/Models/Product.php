@@ -27,16 +27,17 @@ final class Product extends Model
     }
 
     /**
-     * @param array{search?:string,category_id?:string|int,brand_id?:string|int} $filters
+     * @param array{search?:string,category_id?:string|int,brand_id?:string|int,approval_status?:string} $filters
      */
     public static function paginateWithFilters(int $page, int $perPage, array $filters): array
     {
         [$where, $bindings] = self::buildFilterWhere($filters);
 
-        $sql = 'SELECT p.*, c.name AS category_name, b.name AS brand_name
+        $sql = 'SELECT p.*, c.name AS category_name, b.name AS brand_name, v.store_name AS vendor_store_name
                 FROM products p
                 LEFT JOIN categories c ON c.id = p.category_id
-                LEFT JOIN brands b ON b.id = p.brand_id'
+                LEFT JOIN brands b ON b.id = p.brand_id
+                LEFT JOIN vendors v ON v.id = p.vendor_id'
               . ($where !== '' ? ' WHERE ' . $where : '')
               . ' ORDER BY p.created_at DESC
                 LIMIT :limit OFFSET :offset';
@@ -90,16 +91,22 @@ final class Product extends Model
             $bindings['brand_id'] = (int) $filters['brand_id'];
         }
 
+        if (($filters['approval_status'] ?? '') !== '') {
+            $conditions[] = 'p.approval_status = :approval_status';
+            $bindings['approval_status'] = $filters['approval_status'];
+        }
+
         return [implode(' AND ', $conditions), $bindings];
     }
 
     public static function findWithRelations(int $id): ?array
     {
         $stmt = self::db()->prepare(
-            'SELECT p.*, c.name AS category_name, b.name AS brand_name
+            'SELECT p.*, c.name AS category_name, b.name AS brand_name, v.store_name AS vendor_store_name
              FROM products p
              LEFT JOIN categories c ON c.id = p.category_id
              LEFT JOIN brands b ON b.id = p.brand_id
+             LEFT JOIN vendors v ON v.id = p.vendor_id
              WHERE p.id = :id AND p.deleted_at IS NULL
              LIMIT 1'
         );
@@ -112,6 +119,120 @@ final class Product extends Model
     public static function softDelete(int $id): bool
     {
         return self::update($id, ['deleted_at' => date('Y-m-d H:i:s')]);
+    }
+
+    public static function approveListing(int $id): void
+    {
+        self::update($id, ['approval_status' => 'approved', 'rejection_reason' => null]);
+    }
+
+    public static function rejectListing(int $id, string $reason): void
+    {
+        self::update($id, ['approval_status' => 'rejected', 'rejection_reason' => $reason]);
+    }
+
+    // -------------------------------------------------------------
+    // Vendor-portal queries - always scoped to a single vendor_id, so
+    // a vendor can never read or touch another vendor's products.
+    // -------------------------------------------------------------
+
+    /**
+     * @param array{search?:string,approval_status?:string} $filters
+     */
+    public static function paginateForVendor(int $vendorId, int $page, int $perPage, array $filters = []): array
+    {
+        [$where, $bindings] = self::buildVendorWhere($vendorId, $filters);
+        $offset = (max(1, $page) - 1) * $perPage;
+
+        $stmt = self::db()->prepare(
+            "SELECT p.*, c.name AS category_name
+             FROM products p
+             LEFT JOIN categories c ON c.id = p.category_id
+             {$where}
+             ORDER BY p.created_at DESC
+             LIMIT :limit OFFSET :offset"
+        );
+
+        foreach ($bindings as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function countForVendor(int $vendorId, array $filters = []): int
+    {
+        [$where, $bindings] = self::buildVendorWhere($vendorId, $filters);
+        $stmt = self::db()->prepare("SELECT COUNT(*) AS total FROM products p {$where}");
+        $stmt->execute($bindings);
+
+        return (int) $stmt->fetch()['total'];
+    }
+
+    private static function buildVendorWhere(int $vendorId, array $filters): array
+    {
+        $conditions = ['p.vendor_id = :vendor_id', 'p.deleted_at IS NULL'];
+        $bindings = ['vendor_id' => $vendorId];
+
+        if (($filters['search'] ?? '') !== '') {
+            $conditions[] = '(p.name LIKE :search_name OR p.sku LIKE :search_sku)';
+            $bindings['search_name'] = '%' . $filters['search'] . '%';
+            $bindings['search_sku'] = '%' . $filters['search'] . '%';
+        }
+
+        if (($filters['approval_status'] ?? '') !== '') {
+            $conditions[] = 'p.approval_status = :approval_status';
+            $bindings['approval_status'] = $filters['approval_status'];
+        }
+
+        return ['WHERE ' . implode(' AND ', $conditions), $bindings];
+    }
+
+    /**
+     * A single product, but only if it belongs to this vendor - the
+     * ownership check every vendor-portal edit/delete/image action
+     * goes through before touching a row, so a vendor can never
+     * reach another vendor's product by guessing an id in the URL.
+     */
+    public static function findForVendor(int $id, int $vendorId): ?array
+    {
+        $stmt = self::db()->prepare(
+            'SELECT p.*, c.name AS category_name
+             FROM products p
+             LEFT JOIN categories c ON c.id = p.category_id
+             WHERE p.id = :id AND p.vendor_id = :vendor_id AND p.deleted_at IS NULL
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $id, 'vendor_id' => $vendorId]);
+        $row = $stmt->fetch();
+
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * Vendor product counts by approval status, for the vendor
+     * dashboard's stat tiles.
+     */
+    public static function statusCountsForVendor(int $vendorId): array
+    {
+        $stmt = self::db()->prepare(
+            "SELECT approval_status, COUNT(*) AS total
+             FROM products
+             WHERE vendor_id = :vendor_id AND deleted_at IS NULL
+             GROUP BY approval_status"
+        );
+        $stmt->execute(['vendor_id' => $vendorId]);
+
+        $counts = ['approved' => 0, 'pending' => 0, 'rejected' => 0];
+        foreach ($stmt->fetchAll() as $row) {
+            $counts[$row['approval_status']] = (int) $row['total'];
+        }
+
+        return $counts;
     }
 
     // -------------------------------------------------------------
@@ -173,7 +294,7 @@ final class Product extends Model
 
     private static function buildPublicWhere(array $filters): array
     {
-        $conditions = ['p.deleted_at IS NULL', 'p.is_active = 1'];
+        $conditions = ['p.deleted_at IS NULL', 'p.is_active = 1', "p.approval_status = 'approved'"];
         $bindings = [];
 
         if (($filters['search'] ?? '') !== '') {
@@ -213,7 +334,7 @@ final class Product extends Model
              FROM products p
              LEFT JOIN categories c ON c.id = p.category_id
              LEFT JOIN brands b ON b.id = p.brand_id
-             WHERE p.slug = :slug AND p.deleted_at IS NULL AND p.is_active = 1
+             WHERE p.slug = :slug AND p.deleted_at IS NULL AND p.is_active = 1 AND p.approval_status = \'approved\'
              LIMIT 1'
         );
         $stmt->execute(['slug' => $slug]);
@@ -254,7 +375,7 @@ final class Product extends Model
                        ' . self::PRIMARY_IMAGE_SUBQUERY . '
                 FROM products p
                 LEFT JOIN categories c ON c.id = p.category_id
-                WHERE p.deleted_at IS NULL AND p.is_active = 1 AND ' . $extraCondition . '
+                WHERE p.deleted_at IS NULL AND p.is_active = 1 AND p.approval_status = \'approved\' AND ' . $extraCondition . '
                 ORDER BY ' . $orderBy . '
                 LIMIT :limit';
 
@@ -273,7 +394,7 @@ final class Product extends Model
     public static function allActiveForSitemap(): array
     {
         $stmt = self::db()->query(
-            'SELECT slug, updated_at FROM products WHERE deleted_at IS NULL AND is_active = 1'
+            "SELECT slug, updated_at FROM products WHERE deleted_at IS NULL AND is_active = 1 AND approval_status = 'approved'"
         );
 
         return $stmt->fetchAll();
