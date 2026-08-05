@@ -28,7 +28,7 @@ final class App
 
         $router = new Router();
 
-        foreach (['/routes/web.php', '/routes/admin.php'] as $routeFile) {
+        foreach (['/routes/web.php', '/routes/admin.php', '/routes/vendor.php'] as $routeFile) {
             $registrar = require $this->basePath . $routeFile;
             $registrar($router);
         }

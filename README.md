@@ -35,7 +35,13 @@ for reports, CSV/Excel/PDF exports, and expense management, and
 [`docs/MODULE_13_BLOG_TESTIMONIALS_STATIC_SEO_SITEMAP.md`](docs/MODULE_13_BLOG_TESTIMONIALS_STATIC_SEO_SITEMAP.md)
 for the blog, testimonials, static pages, SEO, and sitemap, and
 [`docs/MODULE_14_SECURITY_HARDENING_FINAL_QA.md`](docs/MODULE_14_SECURITY_HARDENING_FINAL_QA.md)
-for the final security audit, bug fixes, and full regression pass.
+for the final security audit, bug fixes, and full regression pass, and
+[`docs/MODULE_15_VENDOR_MARKETPLACE_FOUNDATION.md`](docs/MODULE_15_VENDOR_MARKETPLACE_FOUNDATION.md)
+for the vendor marketplace foundation (vendor accounts, auth, schema).
+
+The 14-module single-vendor build above is being extended into a
+multi-vendor marketplace (third-party sellers, commission, payouts) in
+a second wave of modules - see "Marketplace extension" below.
 
 ## Tech stack
 
@@ -72,7 +78,8 @@ Password: ChangeMe!123
 
 ## Project status
 
-**Complete.** All 14 modules of the build plan have shipped:
+The original 14-module single-vendor build plan is **complete**; a
+marketplace extension (Modules 15-18, see below) is now in progress.
 
 - [x] **Module 1** — Architecture, folder structure, full MySQL schema, config
 - [x] **Module 2** — Customer authentication (register/login/verify/reset/remember-me)
@@ -93,3 +100,15 @@ See [`docs/MODULE_14_SECURITY_HARDENING_FINAL_QA.md`](docs/MODULE_14_SECURITY_HA
 for what a real production launch still needs (payment gateway
 credentials, SMTP credentials, an automated test suite) before going
 live. See the repo's commit history for progress on each module.
+
+## Marketplace extension
+
+Converting the single-vendor store above into a multi-vendor
+marketplace (third-party sellers, per-category commission, vendor
+payouts):
+
+- [x] **Module 15** — Vendor marketplace foundation (schema, vendor
+      accounts, vendor auth, placeholder dashboard)
+- [ ] Module 16 — Vendor registration, approval & dashboard shell
+- [ ] Module 17 — Vendor product management & listing approval
+- [ ] Module 18 — Order splitting, commission & payouts
