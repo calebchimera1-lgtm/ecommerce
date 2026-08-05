@@ -7,6 +7,7 @@ namespace App\Services\Order;
 use App\Core\Database;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\InventoryMovement;
@@ -15,6 +16,9 @@ use App\Models\OrderAddress;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Payment;
+use App\Models\Setting;
+use App\Models\VendorOrder;
+use App\Models\VendorOrderStatusHistory;
 use App\Services\Cart\CartCalculator;
 use App\Services\Payment\PaymentGatewayManager;
 use Throwable;
@@ -88,22 +92,8 @@ final class OrderPlacementService
             OrderAddress::create(array_merge($billingAddress, ['order_id' => $orderId, 'type' => 'billing']));
             OrderAddress::create(array_merge($shippingAddress, ['order_id' => $orderId, 'type' => 'shipping']));
 
-            foreach ($cartItems as $item) {
-                $sku = $item['product_sku'] . ($item['sku_suffix'] !== null ? '-' . $item['sku_suffix'] : '');
-
-                OrderItem::create([
-                    'order_id' => $orderId,
-                    'product_id' => $item['product_id'],
-                    'product_attribute_id' => $item['product_attribute_id'],
-                    'product_name' => $item['product_name'],
-                    'sku' => $sku,
-                    'price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'subtotal' => (string) ((float) $item['price'] * (int) $item['quantity']),
-                ]);
-
-                self::decrementStock($item, $orderId);
-            }
+            $vendorGroups = self::createOrderItems($orderId, $cartItems);
+            self::splitIntoVendorOrders($orderId, $vendorGroups);
 
             OrderStatusHistory::create([
                 'order_id' => $orderId,
@@ -155,6 +145,110 @@ final class OrderPlacementService
         }
 
         return Order::find($orderId);
+    }
+
+    /**
+     * Creates every order_items row and decrements stock, same as
+     * before Module 18 - the one addition is computing and storing
+     * each vendor-owned item's commission snapshot (the category's
+     * effective rate and the resulting commission amount) at the
+     * moment of purchase, so a later change to a category's rate never
+     * rewrites what an already-placed order actually owes. Platform
+     * items (vendor_id NULL) get NULL commission columns, same as
+     * before this module existed.
+     *
+     * @return array<int,array{subtotal:float,commission:float,item_ids:int[]}> Keyed by vendor_id, the input splitIntoVendorOrders() needs.
+     */
+    private static function createOrderItems(int $orderId, array $cartItems): array
+    {
+        $commissionRateByCategory = [];
+        $defaultRate = (float) Setting::get('default_commission_rate', 15.00);
+        $vendorGroups = [];
+
+        foreach ($cartItems as $item) {
+            $sku = $item['product_sku'] . ($item['sku_suffix'] !== null ? '-' . $item['sku_suffix'] : '');
+            $subtotal = (float) $item['price'] * (int) $item['quantity'];
+            $vendorId = $item['vendor_id'] !== null ? (int) $item['vendor_id'] : null;
+            $commissionRate = null;
+            $commissionAmount = null;
+
+            if ($vendorId !== null) {
+                $categoryId = (int) $item['category_id'];
+
+                if (!array_key_exists($categoryId, $commissionRateByCategory)) {
+                    $category = Category::find($categoryId);
+                    $commissionRateByCategory[$categoryId] = $category !== null && $category['commission_rate'] !== null
+                        ? (float) $category['commission_rate']
+                        : $defaultRate;
+                }
+
+                $commissionRate = $commissionRateByCategory[$categoryId];
+                $commissionAmount = round($subtotal * $commissionRate / 100, 2);
+            }
+
+            $orderItemId = OrderItem::create([
+                'order_id' => $orderId,
+                'product_id' => $item['product_id'],
+                'product_attribute_id' => $item['product_attribute_id'],
+                'product_name' => $item['product_name'],
+                'sku' => $sku,
+                'price' => $item['price'],
+                'quantity' => $item['quantity'],
+                'subtotal' => (string) $subtotal,
+                'commission_rate' => $commissionRate !== null ? (string) $commissionRate : null,
+                'commission_amount' => $commissionAmount !== null ? (string) $commissionAmount : null,
+            ]);
+
+            self::decrementStock($item, $orderId);
+
+            if ($vendorId !== null) {
+                $vendorGroups[$vendorId] ??= ['subtotal' => 0.0, 'commission' => 0.0, 'item_ids' => []];
+                $vendorGroups[$vendorId]['subtotal'] += $subtotal;
+                $vendorGroups[$vendorId]['commission'] += $commissionAmount;
+                $vendorGroups[$vendorId]['item_ids'][] = $orderItemId;
+            }
+        }
+
+        return $vendorGroups;
+    }
+
+    /**
+     * One vendor_orders row per vendor present in the cart - the
+     * actual "split" - each carrying that vendor's summed subtotal,
+     * commission, and resulting payout amount, with every one of that
+     * vendor's order_items rows linked back to it. Platform items
+     * (never grouped here, since createOrderItems() only adds
+     * vendor-owned items to $vendorGroups) simply have no
+     * vendor_order_id and stay under the parent order's own status.
+     */
+    private static function splitIntoVendorOrders(int $orderId, array $vendorGroups): void
+    {
+        foreach ($vendorGroups as $vendorId => $group) {
+            $subtotal = round($group['subtotal'], 2);
+            $commission = round($group['commission'], 2);
+            $payout = round($subtotal - $commission, 2);
+
+            $vendorOrderId = VendorOrder::create([
+                'order_id' => $orderId,
+                'vendor_id' => $vendorId,
+                'status' => 'pending',
+                'subtotal' => (string) $subtotal,
+                'commission_amount' => (string) $commission,
+                'payout_amount' => (string) $payout,
+                'payout_status' => 'unpaid',
+            ]);
+
+            VendorOrderStatusHistory::create([
+                'vendor_order_id' => $vendorOrderId,
+                'status' => 'pending',
+                'note' => 'Order placed.',
+                'changed_by' => null,
+            ]);
+
+            foreach ($group['item_ids'] as $itemId) {
+                OrderItem::update($itemId, ['vendor_order_id' => $vendorOrderId]);
+            }
+        }
     }
 
     private static function assertStockAvailable(array $cartItems): void

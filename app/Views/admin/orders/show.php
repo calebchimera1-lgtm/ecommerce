@@ -2,9 +2,19 @@
 /**
  * @var array $order @var array $items @var array $addresses @var array|null $payment
  * @var array $statusHistory @var array|null $shipment @var array $statuses
+ * @var array $vendorOrders @var array $vendorOrderStatuses
  */
 $billing = $addresses['billing'] ?? null;
 $shipping = $addresses['shipping'] ?? null;
+$vendorOrderBadge = static function (string $status): string {
+    return match ($status) {
+        'delivered' => 'bg-success',
+        'cancelled' => 'bg-danger',
+        'shipped' => 'bg-info text-dark',
+        'processing' => 'bg-warning text-dark',
+        default => 'bg-secondary',
+    };
+};
 ?>
 <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
     <div>
@@ -31,12 +41,13 @@ $shipping = $addresses['shipping'] ?? null;
 
 <div class="table-responsive mb-4">
     <table class="table table-dark align-middle">
-        <thead><tr><th>Item</th><th>SKU</th><th>Qty</th><th class="text-end">Total</th></tr></thead>
+        <thead><tr><th>Item</th><th>SKU</th><th>Sold By</th><th>Qty</th><th class="text-end">Total</th></tr></thead>
         <tbody>
             <?php foreach ($items as $item): ?>
                 <tr>
                     <td><?= e($item['product_name']) ?></td>
                     <td class="text-white-50"><?= e($item['sku']) ?></td>
+                    <td><?= $item['vendor_store_name'] !== null ? e($item['vendor_store_name']) : '<span class="text-white-50">Platform</span>' ?></td>
                     <td><?= (int) $item['quantity'] ?></td>
                     <td class="text-end"><?= money($item['subtotal']) ?></td>
                 </tr>
@@ -44,6 +55,56 @@ $shipping = $addresses['shipping'] ?? null;
         </tbody>
     </table>
 </div>
+
+<?php if (!empty($vendorOrders)): ?>
+    <div class="mb-5">
+        <h6 class="mb-3" style="color:#f8f7f4;">Vendor Fulfillment</h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>Vendor</th>
+                        <th class="text-end">Subtotal</th>
+                        <th class="text-end">Commission</th>
+                        <th class="text-end">Payout</th>
+                        <th>Fulfillment</th>
+                        <th>Payout Status</th>
+                        <th class="text-end">Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($vendorOrders as $vendorOrder): ?>
+                        <tr>
+                            <td><a href="/admin/vendors/<?= (int) $vendorOrder['vendor_id'] ?>" class="text-warning"><?= e($vendorOrder['vendor_store_name']) ?></a></td>
+                            <td class="text-end"><?= money($vendorOrder['subtotal']) ?></td>
+                            <td class="text-end text-white-50">-<?= money($vendorOrder['commission_amount']) ?></td>
+                            <td class="text-end"><?= money($vendorOrder['payout_amount']) ?></td>
+                            <td><span class="badge <?= $vendorOrderBadge($vendorOrder['status']) ?>"><?= e(ucfirst($vendorOrder['status'])) ?></span></td>
+                            <td>
+                                <?php if ($vendorOrder['payout_status'] === 'paid'): ?>
+                                    <span class="badge bg-success">Paid</span>
+                                <?php else: ?>
+                                    <span class="badge bg-secondary">Unpaid</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-end">
+                                <form method="POST" action="/admin/orders/<?= (int) $order['id'] ?>/vendor-orders/<?= (int) $vendorOrder['id'] ?>/status" class="d-flex gap-1 justify-content-end">
+                                    <?= csrf_field() ?>
+                                    <select class="form-select form-select-sm" name="status" style="width:auto;">
+                                        <?php foreach ($vendorOrderStatuses as $status): ?>
+                                            <option value="<?= e($status) ?>" <?= $vendorOrder['status'] === $status ? 'selected' : '' ?>><?= e(ucfirst($status)) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-light">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<?php endif; ?>
 
 <div class="row justify-content-end mb-5">
     <div class="col-md-4 small">

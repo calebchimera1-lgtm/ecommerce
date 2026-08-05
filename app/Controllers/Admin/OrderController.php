@@ -16,6 +16,7 @@ use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Payment;
 use App\Models\Shipment;
+use App\Models\VendorOrder;
 
 /**
  * Minimal order management: list, view, change status, and attach
@@ -28,6 +29,7 @@ final class OrderController extends Controller
 {
     private const PER_PAGE = 20;
     private const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+    private const VENDOR_ORDER_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
     public function index(Request $request): void
     {
@@ -58,7 +60,42 @@ final class OrderController extends Controller
             'statusHistory' => OrderStatusHistory::forOrder((int) $order['id']),
             'shipment' => Shipment::forOrder((int) $order['id']),
             'statuses' => self::STATUSES,
+            'vendorOrders' => VendorOrder::forOrder((int) $order['id']),
+            'vendorOrderStatuses' => self::VENDOR_ORDER_STATUSES,
         ], 'admin/layouts/app');
+    }
+
+    /**
+     * Lets admin override a vendor's fulfillment status on their own
+     * slice of this order - staff oversight for when a vendor forgets
+     * to update it themselves. Vendors update the same field from
+     * their own portal (Vendor\OrderController::updateStatus());
+     * either path writes the same vendor_order_status_history trail.
+     */
+    public function updateVendorOrderStatus(Request $request): void
+    {
+        $order = $this->loadOrder($request);
+        $vendorOrderId = (int) $request->route('vendorOrderId');
+        $status = (string) $request->input('status');
+
+        if (!in_array($status, self::VENDOR_ORDER_STATUSES, true)) {
+            Session::flash('errors', ['status' => ['Invalid status.']]);
+            $this->back();
+        }
+
+        $belongsToOrder = array_filter(
+            VendorOrder::forOrder((int) $order['id']),
+            static fn (array $vo): bool => (int) $vo['id'] === $vendorOrderId
+        );
+
+        if ($belongsToOrder === []) {
+            Response::abort(404, 'Vendor order not found on this order.');
+        }
+
+        VendorOrder::updateStatus($vendorOrderId, $status, self::nullable($request->input('note')), (int) Auth::id());
+
+        Session::flash('success', 'Vendor order status updated.');
+        $this->redirect('/admin/orders/' . (int) $order['id']);
     }
 
     public function updateStatus(Request $request): void

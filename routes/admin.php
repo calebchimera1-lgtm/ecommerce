@@ -14,6 +14,7 @@ use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\ExpenseController;
 use App\Controllers\Admin\InventoryController;
 use App\Controllers\Admin\OrderController;
+use App\Controllers\Admin\PayoutController;
 use App\Controllers\Admin\ProductController;
 use App\Controllers\Admin\PurchaseOrderController;
 use App\Controllers\Admin\ReportController;
@@ -94,6 +95,7 @@ return function (Router $router): void {
     $router->post('/admin/orders/{id}/status', [OrderController::class, 'updateStatus'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/orders/{id}/shipment', [OrderController::class, 'updateShipment'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/orders/{id}/payment', [OrderController::class, 'markPaid'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/orders/{id}/vendor-orders/{vendorOrderId}/status', [OrderController::class, 'updateVendorOrderStatus'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
 
     $customersPermission = [[PermissionMiddleware::class, 'customers.manage']];
     $router->get('/admin/customers', [CustomerController::class, 'index'], $customersPermission);
@@ -186,4 +188,8 @@ return function (Router $router): void {
     $router->post('/admin/vendors/{id}/reject', [VendorController::class, 'reject'], [...$vendorsPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/vendors/{id}/suspend', [VendorController::class, 'suspend'], [...$vendorsPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/vendors/{id}/reactivate', [VendorController::class, 'reactivate'], [...$vendorsPermission, VerifyCsrfMiddleware::class]);
+
+    $router->get('/admin/payouts', [PayoutController::class, 'index'], $vendorsPermission);
+    $router->get('/admin/payouts/{id}', [PayoutController::class, 'vendor'], $vendorsPermission);
+    $router->post('/admin/payouts/{id}/{vendorOrderId}/mark-paid', [PayoutController::class, 'markPaid'], [...$vendorsPermission, VerifyCsrfMiddleware::class]);
 };

@@ -76,7 +76,12 @@ $shipmentStatusLabels = [
                 <tbody>
                     <?php foreach ($items as $item): ?>
                         <tr>
-                            <td><?= e($item['product_name']) ?></td>
+                            <td>
+                                <?= e($item['product_name']) ?>
+                                <?php if ($item['vendor_store_name'] !== null): ?>
+                                    <br><span class="text-white-50 sans small">Sold by <?= e($item['vendor_store_name']) ?></span>
+                                <?php endif; ?>
+                            </td>
                             <td><?= (int) $item['quantity'] ?></td>
                             <td class="text-end"><?= money($item['subtotal']) ?></td>
                         </tr>

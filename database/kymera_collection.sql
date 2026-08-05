@@ -482,20 +482,26 @@ CREATE TABLE `order_items` (
     `order_id`             BIGINT UNSIGNED NOT NULL,
     `product_id`           BIGINT UNSIGNED NULL COMMENT 'Kept NULL-able so a deleted product does not erase order history',
     `product_attribute_id` BIGINT UNSIGNED NULL,
+    `vendor_order_id`      BIGINT UNSIGNED NULL COMMENT 'NULL for platform-owned items; otherwise links to this line''s vendor sub-order',
     `product_name`         VARCHAR(200) NOT NULL COMMENT 'Snapshot of product name at purchase time',
     `sku`                  VARCHAR(64)  NOT NULL,
     `price`                DECIMAL(12,2) NOT NULL COMMENT 'Unit price at purchase time',
     `quantity`             INT UNSIGNED NOT NULL,
     `subtotal`             DECIMAL(12,2) NOT NULL,
+    `commission_rate`      DECIMAL(5,2) NULL COMMENT 'Category''s effective commission rate at purchase time; NULL for platform items',
+    `commission_amount`    DECIMAL(12,2) NULL COMMENT 'subtotal * commission_rate / 100; NULL for platform items',
     `created_at`           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY `idx_order_items_order` (`order_id`),
     KEY `idx_order_items_product` (`product_id`),
+    KEY `idx_order_items_vendor_order` (`vendor_order_id`),
     CONSTRAINT `fk_order_items_order`
         FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_order_items_product`
         FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_order_items_attribute`
-        FOREIGN KEY (`product_attribute_id`) REFERENCES `product_attributes` (`id`) ON DELETE SET NULL
+        FOREIGN KEY (`product_attribute_id`) REFERENCES `product_attributes` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_order_items_vendor_order`
+        FOREIGN KEY (`vendor_order_id`) REFERENCES `vendor_orders` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE `order_status_history` (
@@ -509,6 +515,51 @@ CREATE TABLE `order_status_history` (
     CONSTRAINT `fk_order_status_history_order`
         FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_order_status_history_user`
+        FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- One row per distinct vendor present in an order - the "split" that
+-- lets each vendor fulfill and get paid for only their own items,
+-- independent of the parent order and any other vendor sharing it.
+-- `order_items.vendor_order_id` above already points at this table;
+-- the forward reference is fine since FOREIGN_KEY_CHECKS is off for
+-- this whole script (see the top of the file).
+CREATE TABLE `vendor_orders` (
+    `id`                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `order_id`          BIGINT UNSIGNED NOT NULL,
+    `vendor_id`         BIGINT UNSIGNED NOT NULL,
+    `status`            ENUM('pending','processing','shipped','delivered','cancelled') NOT NULL DEFAULT 'pending' COMMENT 'This vendor''s own fulfillment status for their slice of the order',
+    `subtotal`          DECIMAL(12,2) NOT NULL,
+    `commission_amount` DECIMAL(12,2) NOT NULL,
+    `payout_amount`     DECIMAL(12,2) NOT NULL COMMENT 'subtotal - commission_amount; what the platform owes this vendor for this order',
+    `payout_status`     ENUM('unpaid','paid') NOT NULL DEFAULT 'unpaid',
+    `paid_at`           TIMESTAMP NULL DEFAULT NULL,
+    `paid_by`           BIGINT UNSIGNED NULL COMMENT 'Admin who recorded the manual payout',
+    `payout_reference`  VARCHAR(191) NULL COMMENT 'Admin''s free-text note on how/where the payout was sent',
+    `created_at`        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_vendor_orders_order_vendor` (`order_id`, `vendor_id`),
+    KEY `idx_vendor_orders_vendor` (`vendor_id`),
+    KEY `idx_vendor_orders_payout_status` (`payout_status`),
+    CONSTRAINT `fk_vendor_orders_order`
+        FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_vendor_orders_vendor`
+        FOREIGN KEY (`vendor_id`) REFERENCES `vendors` (`id`) ON DELETE RESTRICT,
+    CONSTRAINT `fk_vendor_orders_paid_by`
+        FOREIGN KEY (`paid_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE `vendor_order_status_history` (
+    `id`              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `vendor_order_id` BIGINT UNSIGNED NOT NULL,
+    `status`          VARCHAR(30) NOT NULL,
+    `note`            VARCHAR(255) NULL,
+    `changed_by`      BIGINT UNSIGNED NULL COMMENT 'Vendor or staff user_id, NULL for system-generated changes',
+    `created_at`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY `idx_vendor_order_status_history_vendor_order` (`vendor_order_id`),
+    CONSTRAINT `fk_vendor_order_status_history_vendor_order`
+        FOREIGN KEY (`vendor_order_id`) REFERENCES `vendor_orders` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_vendor_order_status_history_user`
         FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 

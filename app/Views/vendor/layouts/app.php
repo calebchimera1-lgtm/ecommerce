@@ -5,10 +5,11 @@ use App\Core\Auth;
 $vendorUser = Auth::user();
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
-// Module 18 adds "My Orders" and "Payouts", appended here once they ship.
 $navItems = [
     ['label' => 'Dashboard', 'icon' => 'fa-gauge', 'href' => '/vendor/dashboard'],
     ['label' => 'My Products', 'icon' => 'fa-box', 'href' => '/vendor/products'],
+    ['label' => 'My Orders', 'icon' => 'fa-truck', 'href' => '/vendor/orders'],
+    ['label' => 'Payouts', 'icon' => 'fa-sack-dollar', 'href' => '/vendor/payouts'],
     ['label' => 'Store Profile', 'icon' => 'fa-store', 'href' => '/vendor/profile'],
 ];
 ?>

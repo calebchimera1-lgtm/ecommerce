@@ -115,4 +115,11 @@ payouts):
 - [x] **Module 17** — Vendor product management & listing approval
       (vendor product CRUD, admin approval queue built into the
       existing product list, commission rate shown per category)
-- [ ] Module 18 — Order splitting, commission & payouts
+- [x] **Module 18** — Order splitting, commission & payouts (mixed-cart
+      checkout splits into per-vendor sub-orders, commission calculated
+      and frozen at purchase time, manual payout ledger for admin)
+
+The marketplace extension (Modules 15-18) is complete: vendors apply,
+get approved, list and manage their own products under admin review,
+and get their orders split out with commission calculated and payouts
+tracked - on top of the original single-vendor storefront above.

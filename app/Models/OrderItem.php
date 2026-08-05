@@ -11,10 +11,37 @@ final class OrderItem extends Model
 {
     protected static string $table = 'order_items';
 
+    /**
+     * Every item on an order, annotated with the selling vendor's
+     * store name where applicable (NULL `vendor_store_name` means the
+     * item is platform-owned) - lets both the admin and customer order
+     * views show "Sold by X" without a separate query.
+     */
     public static function forOrder(int $orderId): array
     {
-        $stmt = self::db()->prepare('SELECT * FROM order_items WHERE order_id = :order_id ORDER BY id ASC');
+        $stmt = self::db()->prepare(
+            'SELECT oi.*, v.store_name AS vendor_store_name
+             FROM order_items oi
+             LEFT JOIN vendor_orders vo ON vo.id = oi.vendor_order_id
+             LEFT JOIN vendors v ON v.id = vo.vendor_id
+             WHERE oi.order_id = :order_id
+             ORDER BY oi.id ASC'
+        );
         $stmt->execute(['order_id' => $orderId]);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Only the items belonging to one vendor sub-order - what a
+     * vendor sees when they open one of their own orders, never any
+     * other vendor's or the platform's items from the same parent
+     * order.
+     */
+    public static function forVendorOrder(int $vendorOrderId): array
+    {
+        $stmt = self::db()->prepare('SELECT * FROM order_items WHERE vendor_order_id = :vendor_order_id ORDER BY id ASC');
+        $stmt->execute(['vendor_order_id' => $vendorOrderId]);
 
         return $stmt->fetchAll();
     }

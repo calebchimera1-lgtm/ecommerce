@@ -11,7 +11,10 @@ $badge = match ($vendor['status']) {
         <h4 class="mb-1" style="color:#f8f7f4;"><?= e($vendor['store_name']) ?></h4>
         <span class="badge <?= $badge ?>"><?= e(ucfirst($vendor['status'])) ?></span>
     </div>
-    <a href="/admin/vendors" class="btn btn-outline-light btn-sm">&larr; Back to Vendors</a>
+    <div class="d-flex gap-2">
+        <a href="/admin/payouts/<?= (int) $vendor['id'] ?>" class="btn btn-outline-light btn-sm">Payout Ledger</a>
+        <a href="/admin/vendors" class="btn btn-outline-light btn-sm">&larr; Back to Vendors</a>
+    </div>
 </div>
 
 <div class="row g-4 mb-4">

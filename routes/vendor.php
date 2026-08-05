@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Controllers\Vendor\AuthController;
 use App\Controllers\Vendor\DashboardController;
+use App\Controllers\Vendor\OrderController;
+use App\Controllers\Vendor\PayoutController;
 use App\Controllers\Vendor\ProductController;
 use App\Controllers\Vendor\ProfileController;
 use App\Core\Response;
@@ -43,4 +45,10 @@ return function (Router $router): void {
     $router->post('/vendor/products/{id}/delete', [ProductController::class, 'destroy'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
     $router->post('/vendor/products/{id}/images/{imageId}/delete', [ProductController::class, 'deleteImage'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
     $router->post('/vendor/products/{id}/images/{imageId}/primary', [ProductController::class, 'setPrimaryImage'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    $router->get('/vendor/orders', [OrderController::class, 'index'], [VendorMiddleware::class]);
+    $router->get('/vendor/orders/{id}', [OrderController::class, 'show'], [VendorMiddleware::class]);
+    $router->post('/vendor/orders/{id}/status', [OrderController::class, 'updateStatus'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
+
+    $router->get('/vendor/payouts', [PayoutController::class, 'index'], [VendorMiddleware::class]);
 };

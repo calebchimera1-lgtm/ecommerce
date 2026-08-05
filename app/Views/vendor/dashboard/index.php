@@ -1,14 +1,8 @@
-<?php /** @var array $vendor @var array $productCounts */ ?>
+<?php /** @var array $vendor @var array $productCounts @var float $unpaidBalance @var int $orderCount */ ?>
 <h4 class="mb-1" style="color:#f8f7f4;">Welcome back, <?= e($vendor['store_name']) ?>.</h4>
 <p class="text-white-50 mb-4">Your vendor account has been active since <?= e(date('F j, Y', strtotime($vendor['approved_at'] ?? $vendor['created_at']))) ?>.</p>
 
 <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="stat-tile">
-            <div class="stat-label">Account Status</div>
-            <div class="stat-value text-success">Approved</div>
-        </div>
-    </div>
     <div class="col-6 col-md-3">
         <div class="stat-tile">
             <div class="stat-label">Live Products</div>
@@ -23,8 +17,14 @@
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-tile">
-            <div class="stat-label">Rejected</div>
-            <div class="stat-value text-danger"><?= (int) $productCounts['rejected'] ?></div>
+            <div class="stat-label">Orders To Date</div>
+            <div class="stat-value"><?= (int) $orderCount ?></div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-tile">
+            <div class="stat-label">Unpaid Balance</div>
+            <div class="stat-value text-warning"><?= money($unpaidBalance) ?></div>
         </div>
     </div>
 </div>
@@ -34,10 +34,14 @@
         Manage your listings from <a href="/vendor/products" class="text-warning">My Products</a> - new
         listings and edits are reviewed by our team before they go live on the storefront.
     </p>
+    <p class="text-white-50 mb-2">
+        Track fulfillment from <a href="/vendor/orders" class="text-warning">My Orders</a> and see what
+        you're owed on the <a href="/vendor/payouts" class="text-warning">Payouts</a> page - payouts are
+        recorded and paid manually by our team, not processed automatically.
+    </p>
     <p class="text-white-50 mb-0">
-        Order fulfillment and payout tracking for your store are on the way in the next release. In the
-        meantime, keep your <a href="/vendor/profile" class="text-warning">Store Profile</a> up to date -
-        your store name, description, logo, and payout details are what customers and our team will see.
+        Keep your <a href="/vendor/profile" class="text-warning">Store Profile</a> up to date - your store
+        name, description, logo, and payout details are what customers and our team will see.
     </p>
 </div>
 
