@@ -24,4 +24,17 @@ final class Coupon extends Model
 
         return $row === false ? null : $row;
     }
+
+    /**
+     * Atomic `used_count = used_count + 1`, not a PHP-computed
+     * read-then-write - two orders redeeming the same coupon in the
+     * same instant must both actually increment it, not have the
+     * second overwrite the first with a value computed from the same
+     * stale read.
+     */
+    public static function incrementUsage(int $id): void
+    {
+        $stmt = self::db()->prepare('UPDATE coupons SET used_count = used_count + 1 WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+    }
 }

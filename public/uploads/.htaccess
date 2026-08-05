@@ -1,0 +1,18 @@
+# Defense in depth: ImageUploader already validates the real MIME
+# type (fileinfo), confirms the file decodes as an image
+# (getimagesize()), and always writes a random server-generated
+# filename with a server-determined extension - the client's supplied
+# filename/extension is never trusted. This file is a second,
+# independent layer in case that validation is ever weakened or
+# bypassed: nothing under /uploads is ever executed as a script,
+# regardless of its extension.
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|pht|phar)$">
+    Require all denied
+</FilesMatch>
+
+Options -Indexes -ExecCGI

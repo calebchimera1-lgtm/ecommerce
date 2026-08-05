@@ -33,7 +33,9 @@ for inventory, suppliers, and purchase orders, and
 [`docs/MODULE_12_REPORTS_EXPORTS_EXPENSES.md`](docs/MODULE_12_REPORTS_EXPORTS_EXPENSES.md)
 for reports, CSV/Excel/PDF exports, and expense management, and
 [`docs/MODULE_13_BLOG_TESTIMONIALS_STATIC_SEO_SITEMAP.md`](docs/MODULE_13_BLOG_TESTIMONIALS_STATIC_SEO_SITEMAP.md)
-for the blog, testimonials, static pages, SEO, and sitemap.
+for the blog, testimonials, static pages, SEO, and sitemap, and
+[`docs/MODULE_14_SECURITY_HARDENING_FINAL_QA.md`](docs/MODULE_14_SECURITY_HARDENING_FINAL_QA.md)
+for the final security audit, bug fixes, and full regression pass.
 
 ## Tech stack
 
@@ -70,7 +72,7 @@ Password: ChangeMe!123
 
 ## Project status
 
-Being delivered module by module per the build plan. Completed so far:
+**Complete.** All 14 modules of the build plan have shipped:
 
 - [x] **Module 1** — Architecture, folder structure, full MySQL schema, config
 - [x] **Module 2** — Customer authentication (register/login/verify/reset/remember-me)
@@ -85,6 +87,9 @@ Being delivered module by module per the build plan. Completed so far:
 - [x] **Module 11** — Inventory, suppliers, purchase orders
 - [x] **Module 12** — Reports & exports (PDF/Excel/CSV), expense management
 - [x] **Module 13** — Blog, testimonials, static pages, SEO, sitemap
-- [ ] Module 14 — Security hardening pass & final QA
+- [x] **Module 14** — Security hardening pass & final QA
 
-See the repo's task list / commit history for progress on each.
+See [`docs/MODULE_14_SECURITY_HARDENING_FINAL_QA.md`](docs/MODULE_14_SECURITY_HARDENING_FINAL_QA.md#8-known-limitations-and-recommendations-for-production)
+for what a real production launch still needs (payment gateway
+credentials, SMTP credentials, an automated test suite) before going
+live. See the repo's commit history for progress on each module.

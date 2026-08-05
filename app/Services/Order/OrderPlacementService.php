@@ -53,6 +53,7 @@ final class OrderPlacementService
         }
 
         self::assertStockAvailable($cartItems);
+        self::assertCouponStillValid($cartItems, $coupon, $userId);
 
         $summary = CartCalculator::summarize($cartItems, $coupon, $shippingMethod, $taxRate);
         $gateway = PaymentGatewayManager::resolve($paymentGatewaySlug);
@@ -137,7 +138,7 @@ final class OrderPlacementService
 
             if ($coupon !== null) {
                 CouponUsage::create(['coupon_id' => $coupon['id'], 'user_id' => $userId, 'order_id' => $orderId]);
-                Coupon::update($coupon['id'], ['used_count' => (int) $coupon['used_count'] + 1]);
+                Coupon::incrementUsage((int) $coupon['id']);
             }
 
             CartItem::clearForCart($cartId);
@@ -168,6 +169,47 @@ final class OrderPlacementService
                     "Sorry, \"{$item['product_name']}\" only has {$available} left in stock."
                 );
             }
+        }
+    }
+
+    /**
+     * Re-validates a coupon that was already applied to the cart,
+     * against its current DB state, right before it's used to compute
+     * the order total. Without this, a coupon applied at cart-add time
+     * (CartController::applyCoupon(), which does check all of this)
+     * would still be honored at checkout even if it expired, was
+     * deactivated, or hit its usage/per-user limit in the time between
+     * - CartCalculator::summarize() itself doesn't re-check validity,
+     * it trusts whatever coupon row it's handed.
+     */
+    private static function assertCouponStillValid(array $cartItems, ?array $coupon, int $userId): void
+    {
+        if ($coupon === null) {
+            return;
+        }
+
+        $fresh = Coupon::findValidByCode($coupon['code']);
+
+        if ($fresh === null) {
+            throw new OrderPlacementException('Your coupon is no longer valid. Please review your cart and try again.');
+        }
+
+        $subtotal = array_reduce(
+            $cartItems,
+            static fn (float $carry, array $item): float => $carry + (float) $item['price'] * (int) $item['quantity'],
+            0.0
+        );
+
+        if ($fresh['min_order_amount'] !== null && $subtotal < (float) $fresh['min_order_amount']) {
+            throw new OrderPlacementException('Your coupon requires a higher order amount. Please review your cart and try again.');
+        }
+
+        if ($fresh['usage_limit'] !== null && (int) $fresh['used_count'] >= (int) $fresh['usage_limit']) {
+            throw new OrderPlacementException('This coupon has reached its usage limit. Please review your cart and try again.');
+        }
+
+        if ($fresh['per_user_limit'] !== null && CouponUsage::countForUser((int) $fresh['id'], $userId) >= (int) $fresh['per_user_limit']) {
+            throw new OrderPlacementException('You have already used this coupon the maximum number of times.');
         }
     }
 

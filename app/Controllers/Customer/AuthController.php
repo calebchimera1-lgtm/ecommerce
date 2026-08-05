@@ -27,6 +27,23 @@ final class AuthController extends Controller
 
     public function register(Request $request): void
     {
+        $ip = $request->ip();
+        $identifier = 'register:' . $ip;
+
+        if (RateLimiter::tooManyAttempts($identifier)) {
+            Session::flash('errors', ['email' => ['Too many signup attempts from this location. Please try again in a few minutes.']]);
+            $this->back();
+        }
+
+        // Counted before validation, not after - registration has no
+        // "successful = 1, stop counting" case the way login does (a
+        // fresh signup only ever happens once per email), so this is
+        // purely a request-frequency cap per IP. Counting only
+        // validation-passing attempts would let an attacker send
+        // endless deliberately-invalid submissions without ever
+        // tripping the limit.
+        RateLimiter::hit($identifier, $ip, false);
+
         $data = $this->validate($request->all(), [
             'first_name' => 'required|max:100',
             'last_name' => 'required|max:100',
@@ -128,6 +145,20 @@ final class AuthController extends Controller
 
     public function forgotPassword(Request $request): void
     {
+        $ip = $request->ip();
+        $identifier = 'pwreset:' . $ip;
+
+        if (RateLimiter::tooManyAttempts($identifier)) {
+            Session::flash('errors', ['email' => ['Too many reset requests from this location. Please try again in a few minutes.']]);
+            $this->redirect('/forgot-password');
+        }
+
+        // IP-keyed (not email-keyed) and counted regardless of outcome,
+        // unlike login throttling - this stops one attacker from
+        // email-bombing many different target addresses via this form,
+        // not just repeatedly targeting one account.
+        RateLimiter::hit($identifier, $ip, false);
+
         $data = $this->validate($request->all(), ['email' => 'required|email']);
         $email = mb_strtolower($data['email']);
         $user = User::findByEmail($email);
@@ -228,6 +259,16 @@ final class AuthController extends Controller
 
     public function resendVerification(Request $request): void
     {
+        $ip = $request->ip();
+        $identifier = 'resend-verify:' . $ip;
+
+        if (RateLimiter::tooManyAttempts($identifier)) {
+            Session::flash('errors', ['email' => ['Too many requests from this location. Please try again in a few minutes.']]);
+            $this->back();
+        }
+
+        RateLimiter::hit($identifier, $ip, false);
+
         $data = $this->validate($request->all(), ['email' => 'required|email']);
         $email = mb_strtolower($data['email']);
         $user = User::findByEmail($email);

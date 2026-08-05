@@ -39,8 +39,13 @@ final class ReportController extends Controller
 
             self::export($format, 'sales-report', 'Sales Report', $headers, $rows, [
                 sprintf('Range: %s to %s', $startDate, $endDate),
-                sprintf('Orders: %d | Sales: %s | Revenue: %s | Avg Order Value: %s',
-                    $summary['order_count'], money($summary['sales_total']), money($summary['revenue_total']), money($summary['avg_order_value'])),
+                sprintf(
+                    'Orders: %d | Sales: %s | Revenue: %s | Avg Order Value: %s',
+                    $summary['order_count'],
+                    money($summary['sales_total']),
+                    money($summary['revenue_total']),
+                    money($summary['avg_order_value'])
+                ),
             ]);
         }
 
