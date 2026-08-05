@@ -27,7 +27,9 @@ for the customer dashboard, order tracking, and reviews, and
 [`docs/MODULE_9_ADMIN_DASHBOARD_ANALYTICS.md`](docs/MODULE_9_ADMIN_DASHBOARD_ANALYTICS.md)
 for the admin dashboard and analytics, and
 [`docs/MODULE_10_ADMIN_CATALOG_ORDER_CUSTOMER_MGMT.md`](docs/MODULE_10_ADMIN_CATALOG_ORDER_CUSTOMER_MGMT.md)
-for admin customer/staff/role/review management and the audit log.
+for admin customer/staff/role/review management and the audit log, and
+[`docs/MODULE_11_INVENTORY_SUPPLIERS_PURCHASE_ORDERS.md`](docs/MODULE_11_INVENTORY_SUPPLIERS_PURCHASE_ORDERS.md)
+for inventory, suppliers, and purchase orders.
 
 ## Tech stack
 
@@ -76,7 +78,7 @@ Being delivered module by module per the build plan. Completed so far:
 - [x] **Module 8** — Customer dashboard, order history, tracking, reviews
 - [x] **Module 9** — Admin dashboard & analytics
 - [x] **Module 10** — Admin catalog/order/customer management
-- [ ] Module 11 — Inventory, suppliers, purchase orders
+- [x] **Module 11** — Inventory, suppliers, purchase orders
 - [ ] Module 12 — Reports & exports (PDF/Excel/CSV)
 - [ ] Module 13 — Blog, testimonials, static pages, SEO, sitemap
 - [ ] Module 14 — Security hardening pass & final QA

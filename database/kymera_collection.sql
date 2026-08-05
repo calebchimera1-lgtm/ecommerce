@@ -576,6 +576,7 @@ CREATE TABLE `purchase_order_items` (
     `product_id`        BIGINT UNSIGNED NOT NULL,
     `quantity`          INT UNSIGNED NOT NULL,
     `unit_cost`         DECIMAL(12,2) NOT NULL,
+    `received_quantity` INT UNSIGNED NOT NULL DEFAULT 0,
     KEY `idx_po_items_po` (`purchase_order_id`),
     KEY `idx_po_items_product` (`product_id`),
     CONSTRAINT `fk_po_items_po`

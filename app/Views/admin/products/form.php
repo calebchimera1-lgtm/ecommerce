@@ -2,6 +2,7 @@
 /**
  * @var array|null $product @var array $images @var array $attributes
  * @var array $specifications @var array $categories @var array $brands
+ * @var array $suppliers
  */
 $isEdit = $product !== null;
 $action = $isEdit ? '/admin/products/' . (int) $product['id'] : '/admin/products';
@@ -51,6 +52,17 @@ $field = static function (string $key, mixed $default = '') use ($isEdit, $produ
                 <?php foreach ($brands as $brand): ?>
                     <option value="<?= (int) $brand['id'] ?>" <?= (int) $field('brand_id', 0) === (int) $brand['id'] ? 'selected' : '' ?>>
                         <?= e($brand['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="supplier_id">Supplier</label>
+            <select class="form-select" id="supplier_id" name="supplier_id">
+                <option value="">No supplier</option>
+                <?php foreach ($suppliers as $supplier): ?>
+                    <option value="<?= (int) $supplier['id'] ?>" <?= (int) $field('supplier_id', 0) === (int) $supplier['id'] ? 'selected' : '' ?>>
+                        <?= e($supplier['name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>

@@ -13,6 +13,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductAttribute;
 use App\Models\ProductImage;
+use App\Models\Supplier;
 use App\Services\Upload\ImageUploader;
 use PDOException;
 use RuntimeException;
@@ -52,6 +53,7 @@ final class ProductController extends Controller
             'specifications' => [],
             'categories' => Category::tree(),
             'brands' => Brand::all('name', 'ASC'),
+            'suppliers' => Supplier::active(),
         ], 'admin/layouts/app');
     }
 
@@ -85,6 +87,13 @@ final class ProductController extends Controller
             $this->back();
         }
 
+        $supplierId = self::nullableInt($request->input('supplier_id'));
+
+        if ($supplierId !== null && Supplier::find($supplierId) === null) {
+            Session::flash('errors', ['supplier_id' => ['Selected supplier does not exist.']]);
+            $this->back();
+        }
+
         try {
             $productId = Product::create([
                 'sku' => $sku,
@@ -93,7 +102,7 @@ final class ProductController extends Controller
                 'slug' => Product::generateSlug($data['name']),
                 'category_id' => (int) $data['category_id'],
                 'brand_id' => $brandId,
-                'supplier_id' => null,
+                'supplier_id' => $supplierId,
                 'short_description' => self::nullable($request->input('short_description')),
                 'description' => self::nullable($request->input('description')),
                 'specifications' => self::buildSpecifications($request),
@@ -140,6 +149,7 @@ final class ProductController extends Controller
             'specifications' => $product['specifications'] !== null ? (json_decode($product['specifications'], true) ?? []) : [],
             'categories' => Category::tree(),
             'brands' => Brand::all('name', 'ASC'),
+            'suppliers' => Supplier::active(),
         ], 'admin/layouts/app');
     }
 
@@ -191,6 +201,13 @@ final class ProductController extends Controller
             $slug = Product::generateSlug($data['name'], $id);
         }
 
+        $supplierId = self::nullableInt($request->input('supplier_id'));
+
+        if ($supplierId !== null && Supplier::find($supplierId) === null) {
+            Session::flash('errors', ['supplier_id' => ['Selected supplier does not exist.']]);
+            $this->back();
+        }
+
         Product::update($id, [
             'sku' => $sku,
             'barcode' => self::nullable($request->input('barcode')),
@@ -198,6 +215,7 @@ final class ProductController extends Controller
             'slug' => $slug,
             'category_id' => (int) $data['category_id'],
             'brand_id' => $brandId,
+            'supplier_id' => $supplierId,
             'short_description' => self::nullable($request->input('short_description')),
             'description' => self::nullable($request->input('description')),
             'specifications' => self::buildSpecifications($request),

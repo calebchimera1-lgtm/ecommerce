@@ -9,11 +9,14 @@ use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\CouponController;
 use App\Controllers\Admin\CustomerController;
 use App\Controllers\Admin\DashboardController;
+use App\Controllers\Admin\InventoryController;
 use App\Controllers\Admin\OrderController;
 use App\Controllers\Admin\ProductController;
+use App\Controllers\Admin\PurchaseOrderController;
 use App\Controllers\Admin\ReviewController;
 use App\Controllers\Admin\RoleController;
 use App\Controllers\Admin\SettingsController;
+use App\Controllers\Admin\SupplierController;
 use App\Controllers\Admin\UserController;
 use App\Core\Response;
 use App\Core\Router;
@@ -107,4 +110,25 @@ return function (Router $router): void {
     $router->post('/admin/reviews/{id}/delete', [ReviewController::class, 'destroy'], [...$reviewsPermission, VerifyCsrfMiddleware::class]);
 
     $router->get('/admin/audit-logs', [AuditLogController::class, 'index'], [[PermissionMiddleware::class, 'audit_logs.view']]);
+
+    $suppliersPermission = [[PermissionMiddleware::class, 'suppliers.manage']];
+    $router->get('/admin/suppliers', [SupplierController::class, 'index'], $suppliersPermission);
+    $router->get('/admin/suppliers/create', [SupplierController::class, 'create'], $suppliersPermission);
+    $router->post('/admin/suppliers', [SupplierController::class, 'store'], [...$suppliersPermission, VerifyCsrfMiddleware::class]);
+    $router->get('/admin/suppliers/{id}/edit', [SupplierController::class, 'edit'], $suppliersPermission);
+    $router->post('/admin/suppliers/{id}', [SupplierController::class, 'update'], [...$suppliersPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/suppliers/{id}/delete', [SupplierController::class, 'destroy'], [...$suppliersPermission, VerifyCsrfMiddleware::class]);
+
+    $inventoryPermission = [[PermissionMiddleware::class, 'inventory.manage']];
+    $router->get('/admin/purchase-orders', [PurchaseOrderController::class, 'index'], $inventoryPermission);
+    $router->get('/admin/purchase-orders/create', [PurchaseOrderController::class, 'create'], $inventoryPermission);
+    $router->post('/admin/purchase-orders', [PurchaseOrderController::class, 'store'], [...$inventoryPermission, VerifyCsrfMiddleware::class]);
+    $router->get('/admin/purchase-orders/{id}', [PurchaseOrderController::class, 'show'], $inventoryPermission);
+    $router->post('/admin/purchase-orders/{id}/order', [PurchaseOrderController::class, 'markOrdered'], [...$inventoryPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/purchase-orders/{id}/receive', [PurchaseOrderController::class, 'receive'], [...$inventoryPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/purchase-orders/{id}/cancel', [PurchaseOrderController::class, 'cancel'], [...$inventoryPermission, VerifyCsrfMiddleware::class]);
+
+    $router->get('/admin/inventory', [InventoryController::class, 'index'], $inventoryPermission);
+    $router->get('/admin/inventory/movements', [InventoryController::class, 'movements'], $inventoryPermission);
+    $router->post('/admin/inventory/{id}/adjust', [InventoryController::class, 'adjust'], [...$inventoryPermission, VerifyCsrfMiddleware::class]);
 };

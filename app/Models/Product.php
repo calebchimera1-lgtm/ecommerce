@@ -265,6 +265,91 @@ final class Product extends Model
         return $stmt->fetchAll();
     }
 
+    /**
+     * Applies a signed delta to a product's stock (positive for
+     * incoming stock, negative for outgoing) - the single place stock
+     * quantity is mutated outside of order placement, so purchase
+     * order receiving and manual inventory adjustments share one code
+     * path instead of each re-implementing the arithmetic.
+     */
+    /**
+     * Minimal id/name/sku list for purchase order line-item dropdowns -
+     * every non-deleted product, active or not (a discontinued-but-not-
+     * deleted product can still be legitimately restocked to sell
+     * through remaining demand).
+     */
+    public static function forSelect(): array
+    {
+        $stmt = self::db()->query(
+            'SELECT id, name, sku FROM products WHERE deleted_at IS NULL ORDER BY name'
+        );
+
+        return $stmt->fetchAll();
+    }
+
+    public static function adjustStock(int $id, int $delta): void
+    {
+        $stmt = self::db()->prepare('UPDATE products SET stock_quantity = stock_quantity + :delta WHERE id = :id');
+        $stmt->execute(['delta' => $delta, 'id' => $id]);
+    }
+
+    /**
+     * @param array{search?:string,stock?:string} $filters stock: 'low'|'out'|''
+     */
+    public static function paginateInventory(int $page, int $perPage, array $filters = []): array
+    {
+        [$where, $bindings] = self::buildInventoryWhere($filters);
+        $offset = (max(1, $page) - 1) * $perPage;
+
+        $stmt = self::db()->prepare(
+            "SELECT p.*, s.name AS supplier_name
+             FROM products p
+             LEFT JOIN suppliers s ON s.id = p.supplier_id
+             {$where}
+             ORDER BY p.stock_quantity ASC
+             LIMIT :limit OFFSET :offset"
+        );
+
+        foreach ($bindings as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function countInventory(array $filters = []): int
+    {
+        [$where, $bindings] = self::buildInventoryWhere($filters);
+        $stmt = self::db()->prepare("SELECT COUNT(*) AS total FROM products p {$where}");
+        $stmt->execute($bindings);
+
+        return (int) $stmt->fetch()['total'];
+    }
+
+    private static function buildInventoryWhere(array $filters): array
+    {
+        $conditions = ['p.deleted_at IS NULL'];
+        $bindings = [];
+
+        if (($filters['search'] ?? '') !== '') {
+            $conditions[] = '(p.name LIKE :search_name OR p.sku LIKE :search_sku)';
+            $bindings['search_name'] = '%' . $filters['search'] . '%';
+            $bindings['search_sku'] = '%' . $filters['search'] . '%';
+        }
+
+        if (($filters['stock'] ?? '') === 'low') {
+            $conditions[] = 'p.stock_quantity <= p.low_stock_threshold AND p.stock_quantity > 0';
+        } elseif (($filters['stock'] ?? '') === 'out') {
+            $conditions[] = 'p.stock_quantity <= 0';
+        }
+
+        return ['WHERE ' . implode(' AND ', $conditions), $bindings];
+    }
+
     public static function lowStock(int $limit = 10): array
     {
         $stmt = self::db()->prepare(
