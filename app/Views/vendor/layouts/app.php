@@ -5,10 +5,11 @@ use App\Core\Auth;
 $vendorUser = Auth::user();
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
-// Only Dashboard exists so far - Module 17 adds "My Products", Module
-// 18 adds "My Orders" and "Payouts", each appended here as they ship.
+// Module 17 adds "My Products", Module 18 adds "My Orders" and
+// "Payouts", each appended here as they ship.
 $navItems = [
     ['label' => 'Dashboard', 'icon' => 'fa-gauge', 'href' => '/vendor/dashboard'],
+    ['label' => 'Store Profile', 'icon' => 'fa-store', 'href' => '/vendor/profile'],
 ];
 ?>
 <!DOCTYPE html>

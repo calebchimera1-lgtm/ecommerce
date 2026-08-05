@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\Vendor\AuthController;
 use App\Controllers\Vendor\DashboardController;
+use App\Controllers\Vendor\ProfileController;
 use App\Core\Response;
 use App\Core\Router;
 use App\Middleware\GuestVendorMiddleware;
@@ -21,9 +22,14 @@ return function (Router $router): void {
         Response::redirect('/vendor/dashboard');
     }, [VendorMiddleware::class]);
 
+    $router->get('/vendor/register', [AuthController::class, 'showRegister'], [GuestVendorMiddleware::class]);
+    $router->post('/vendor/register', [AuthController::class, 'register'], [GuestVendorMiddleware::class, VerifyCsrfMiddleware::class]);
     $router->get('/vendor/login', [AuthController::class, 'showLogin'], [GuestVendorMiddleware::class]);
     $router->post('/vendor/login', [AuthController::class, 'login'], [GuestVendorMiddleware::class, VerifyCsrfMiddleware::class]);
     $router->post('/vendor/logout', [AuthController::class, 'logout'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
 
     $router->get('/vendor/dashboard', [DashboardController::class, 'index'], [VendorMiddleware::class]);
+
+    $router->get('/vendor/profile', [ProfileController::class, 'index'], [VendorMiddleware::class]);
+    $router->post('/vendor/profile', [ProfileController::class, 'update'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
 };

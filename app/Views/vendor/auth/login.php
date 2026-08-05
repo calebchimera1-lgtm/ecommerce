@@ -11,4 +11,5 @@
     </div>
     <button type="submit" class="btn btn-gold w-100 py-2">Sign In</button>
 </form>
-<p class="text-center mt-4 divider-text"><a href="/">&larr; Back to storefront</a></p>
+<p class="text-center mt-4 mb-0 divider-text">Want to sell with us? <a href="/vendor/register">Apply to become a vendor</a></p>
+<p class="text-center mt-2 divider-text"><a href="/">&larr; Back to storefront</a></p>

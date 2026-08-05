@@ -27,6 +27,8 @@
 !/public/uploads/blog/.gitkeep
 /public/uploads/testimonials/*
 !/public/uploads/testimonials/.gitkeep
+/public/uploads/vendors/*
+!/public/uploads/vendors/.gitkeep
 
 ## IDE / OS
 .vscode/

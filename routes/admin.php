@@ -23,6 +23,7 @@ use App\Controllers\Admin\SettingsController;
 use App\Controllers\Admin\SupplierController;
 use App\Controllers\Admin\TestimonialController;
 use App\Controllers\Admin\UserController;
+use App\Controllers\Admin\VendorController;
 use App\Core\Response;
 use App\Core\Router;
 use App\Middleware\AdminMiddleware;
@@ -175,4 +176,12 @@ return function (Router $router): void {
     $router->get('/admin/testimonials/{id}/edit', [TestimonialController::class, 'edit'], $blogPermission);
     $router->post('/admin/testimonials/{id}', [TestimonialController::class, 'update'], [...$blogPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/testimonials/{id}/delete', [TestimonialController::class, 'destroy'], [...$blogPermission, VerifyCsrfMiddleware::class]);
+
+    $vendorsPermission = [[PermissionMiddleware::class, 'vendors.manage']];
+    $router->get('/admin/vendors', [VendorController::class, 'index'], $vendorsPermission);
+    $router->get('/admin/vendors/{id}', [VendorController::class, 'show'], $vendorsPermission);
+    $router->post('/admin/vendors/{id}/approve', [VendorController::class, 'approve'], [...$vendorsPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/vendors/{id}/reject', [VendorController::class, 'reject'], [...$vendorsPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/vendors/{id}/suspend', [VendorController::class, 'suspend'], [...$vendorsPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/vendors/{id}/reactivate', [VendorController::class, 'reactivate'], [...$vendorsPermission, VerifyCsrfMiddleware::class]);
 };

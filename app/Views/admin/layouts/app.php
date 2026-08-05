@@ -20,6 +20,7 @@ $navItems = [
     ['label' => 'Purchase Orders', 'icon' => 'fa-truck-ramp-box', 'href' => '/admin/purchase-orders', 'permission' => 'inventory.manage'],
     ['label' => 'Suppliers', 'icon' => 'fa-industry', 'href' => '/admin/suppliers', 'permission' => 'suppliers.manage'],
     ['label' => 'Customers', 'icon' => 'fa-users', 'href' => '/admin/customers', 'permission' => 'customers.manage'],
+    ['label' => 'Vendors', 'icon' => 'fa-store', 'href' => '/admin/vendors', 'permission' => 'vendors.manage'],
     ['label' => 'Reviews', 'icon' => 'fa-star', 'href' => '/admin/reviews', 'permission' => 'reviews.manage'],
     ['label' => 'Blog Posts', 'icon' => 'fa-newspaper', 'href' => '/admin/blog-posts', 'permission' => 'blog.manage'],
     ['label' => 'Blog Categories', 'icon' => 'fa-folder-tree', 'href' => '/admin/blog-categories', 'permission' => 'blog.manage'],

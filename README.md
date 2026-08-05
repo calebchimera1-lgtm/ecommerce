@@ -109,6 +109,8 @@ payouts):
 
 - [x] **Module 15** — Vendor marketplace foundation (schema, vendor
       accounts, vendor auth, placeholder dashboard)
-- [ ] Module 16 — Vendor registration, approval & dashboard shell
+- [x] **Module 16** — Vendor registration, approval & dashboard shell
+      (public application form, admin approval queue, vendor
+      self-service profile)
 - [ ] Module 17 — Vendor product management & listing approval
 - [ ] Module 18 — Order splitting, commission & payouts
