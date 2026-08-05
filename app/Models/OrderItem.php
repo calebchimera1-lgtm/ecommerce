@@ -43,4 +43,38 @@ final class OrderItem extends Model
 
         return $stmt->fetchAll();
     }
+
+    /**
+     * Same shape as bestSelling(), bounded to a date range instead of
+     * all-time - the product performance report's data source.
+     * $limit = 0 means no limit (used for full CSV/Excel/PDF exports,
+     * where the report should contain every product sold in range, not
+     * just a dashboard-sized top-N).
+     */
+    public static function bestSellingBetween(string $startDate, string $endDate, int $limit = 0): array
+    {
+        $sql = 'SELECT oi.product_id, p.name, p.sku, SUM(oi.quantity) AS units_sold, SUM(oi.subtotal) AS revenue
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id
+                JOIN products p ON p.id = oi.product_id
+                WHERE DATE(o.created_at) BETWEEN :start_date AND :end_date
+                GROUP BY oi.product_id, p.name, p.sku
+                ORDER BY units_sold DESC';
+
+        if ($limit > 0) {
+            $sql .= ' LIMIT :limit';
+        }
+
+        $stmt = self::db()->prepare($sql);
+        $stmt->bindValue(':start_date', $startDate);
+        $stmt->bindValue(':end_date', $endDate);
+
+        if ($limit > 0) {
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
 }

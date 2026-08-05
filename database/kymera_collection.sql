@@ -746,6 +746,7 @@ INSERT INTO `permissions` (`name`, `slug`, `module`) VALUES
     ('Manage Inventory',      'inventory.manage',  'inventory'),
     ('Manage Suppliers',      'suppliers.manage',  'suppliers'),
     ('View Reports',          'reports.view',      'reports'),
+    ('Manage Expenses',       'expenses.manage',   'reports'),
     ('Manage Blog',           'blog.manage',       'blog'),
     ('Manage Settings',       'settings.manage',   'settings'),
     ('View Audit Logs',       'audit_logs.view',   'audit_logs');

@@ -29,12 +29,14 @@ for the admin dashboard and analytics, and
 [`docs/MODULE_10_ADMIN_CATALOG_ORDER_CUSTOMER_MGMT.md`](docs/MODULE_10_ADMIN_CATALOG_ORDER_CUSTOMER_MGMT.md)
 for admin customer/staff/role/review management and the audit log, and
 [`docs/MODULE_11_INVENTORY_SUPPLIERS_PURCHASE_ORDERS.md`](docs/MODULE_11_INVENTORY_SUPPLIERS_PURCHASE_ORDERS.md)
-for inventory, suppliers, and purchase orders.
+for inventory, suppliers, and purchase orders, and
+[`docs/MODULE_12_REPORTS_EXPORTS_EXPENSES.md`](docs/MODULE_12_REPORTS_EXPORTS_EXPENSES.md)
+for reports, CSV/Excel/PDF exports, and expense management.
 
 ## Tech stack
 
 - **Frontend:** HTML5, CSS3, JavaScript (ES6), Bootstrap 5, Font Awesome
-- **Backend:** PHP 8.2+, MySQL 8, PDO (prepared statements only)
+- **Backend:** PHP 8.2+, MySQL 8, PDO (prepared statements only), Dompdf (PDF export)
 - **Architecture:** MVC, OOP, PSR-12 coding style
 - **Dev environment:** XAMPP + VS Code
 
@@ -79,7 +81,7 @@ Being delivered module by module per the build plan. Completed so far:
 - [x] **Module 9** — Admin dashboard & analytics
 - [x] **Module 10** — Admin catalog/order/customer management
 - [x] **Module 11** — Inventory, suppliers, purchase orders
-- [ ] Module 12 — Reports & exports (PDF/Excel/CSV)
+- [x] **Module 12** — Reports & exports (PDF/Excel/CSV), expense management
 - [ ] Module 13 — Blog, testimonials, static pages, SEO, sitemap
 - [ ] Module 14 — Security hardening pass & final QA
 

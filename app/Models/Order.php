@@ -95,6 +95,78 @@ final class Order extends Model
     }
 
     /**
+     * @return array{order_count:int,sales_total:float,revenue_total:float,avg_order_value:float}
+     */
+    public static function salesSummary(string $startDate, string $endDate): array
+    {
+        $stmt = self::db()->prepare(
+            "SELECT COUNT(*) AS order_count,
+                    COALESCE(SUM(total), 0) AS sales_total,
+                    COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN total ELSE 0 END), 0) AS revenue_total
+             FROM orders
+             WHERE DATE(created_at) BETWEEN :start_date AND :end_date"
+        );
+        $stmt->execute(['start_date' => $startDate, 'end_date' => $endDate]);
+        $row = $stmt->fetch();
+
+        $orderCount = (int) $row['order_count'];
+        $salesTotal = (float) $row['sales_total'];
+
+        return [
+            'order_count' => $orderCount,
+            'sales_total' => $salesTotal,
+            'revenue_total' => (float) $row['revenue_total'],
+            'avg_order_value' => $orderCount > 0 ? $salesTotal / $orderCount : 0.0,
+        ];
+    }
+
+    /**
+     * Daily sales/revenue/order-count breakdown between two dates
+     * (inclusive), zero-filled for days with no orders - the report
+     * table's counterpart to the dashboard's dailySalesTrend(), but
+     * bounded by an explicit admin-chosen range instead of a fixed
+     * trailing window, and with revenue/order-count alongside sales.
+     */
+    public static function salesReportDaily(string $startDate, string $endDate): array
+    {
+        $stmt = self::db()->prepare(
+            "SELECT DATE(created_at) AS day,
+                    COUNT(*) AS order_count,
+                    SUM(total) AS sales_total,
+                    SUM(CASE WHEN payment_status = 'paid' THEN total ELSE 0 END) AS revenue_total
+             FROM orders
+             WHERE DATE(created_at) BETWEEN :start_date AND :end_date
+             GROUP BY DATE(created_at)"
+        );
+        $stmt->execute(['start_date' => $startDate, 'end_date' => $endDate]);
+        $byDay = [];
+
+        foreach ($stmt->fetchAll() as $row) {
+            $byDay[$row['day']] = $row;
+        }
+
+        $rows = [];
+        $cursor = strtotime($startDate);
+        $end = strtotime($endDate);
+
+        while ($cursor <= $end) {
+            $day = date('Y-m-d', $cursor);
+            $existing = $byDay[$day] ?? null;
+
+            $rows[] = [
+                'day' => $day,
+                'order_count' => $existing !== null ? (int) $existing['order_count'] : 0,
+                'sales_total' => $existing !== null ? (float) $existing['sales_total'] : 0.0,
+                'revenue_total' => $existing !== null ? (float) $existing['revenue_total'] : 0.0,
+            ];
+
+            $cursor = strtotime('+1 day', $cursor);
+        }
+
+        return $rows;
+    }
+
+    /**
      * Marks an order's payment as collected - the admin-side
      * counterpart to a COD delivery/collection, or manual reconciliation
      * for a gateway payment that settled outside the app's webhook flow.

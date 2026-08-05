@@ -266,13 +266,6 @@ final class Product extends Model
     }
 
     /**
-     * Applies a signed delta to a product's stock (positive for
-     * incoming stock, negative for outgoing) - the single place stock
-     * quantity is mutated outside of order placement, so purchase
-     * order receiving and manual inventory adjustments share one code
-     * path instead of each re-implementing the arithmetic.
-     */
-    /**
      * Minimal id/name/sku list for purchase order line-item dropdowns -
      * every non-deleted product, active or not (a discontinued-but-not-
      * deleted product can still be legitimately restocked to sell
@@ -287,6 +280,13 @@ final class Product extends Model
         return $stmt->fetchAll();
     }
 
+    /**
+     * Applies a signed delta to a product's stock (positive for
+     * incoming stock, negative for outgoing) - the single place stock
+     * quantity is mutated outside of order placement, so purchase
+     * order receiving and manual inventory adjustments share one code
+     * path instead of each re-implementing the arithmetic.
+     */
     public static function adjustStock(int $id, int $delta): void
     {
         $stmt = self::db()->prepare('UPDATE products SET stock_quantity = stock_quantity + :delta WHERE id = :id');
@@ -348,6 +348,29 @@ final class Product extends Model
         }
 
         return ['WHERE ' . implode(' AND ', $conditions), $bindings];
+    }
+
+    /**
+     * Every non-deleted product with its current stock valuation
+     * (stock_quantity * cost_price) - the inventory report's data
+     * source. Unlike the Inventory admin page this isn't paginated;
+     * reports are meant to be exported in full, not browsed a page at
+     * a time.
+     */
+    public static function inventoryReportRows(): array
+    {
+        $stmt = self::db()->query(
+            'SELECT p.sku, p.name, c.name AS category_name, s.name AS supplier_name,
+                    p.stock_quantity, p.low_stock_threshold, p.cost_price,
+                    (p.stock_quantity * COALESCE(p.cost_price, 0)) AS stock_value
+             FROM products p
+             LEFT JOIN categories c ON c.id = p.category_id
+             LEFT JOIN suppliers s ON s.id = p.supplier_id
+             WHERE p.deleted_at IS NULL
+             ORDER BY p.name'
+        );
+
+        return $stmt->fetchAll();
     }
 
     public static function lowStock(int $limit = 10): array

@@ -5,12 +5,13 @@
     "license": "proprietary",
     "require": {
         "php": ">=8.2",
-        "ext-pdo": "*",
-        "ext-mbstring": "*",
+        "ext-curl": "*",
         "ext-fileinfo": "*",
         "ext-gd": "*",
         "ext-json": "*",
-        "ext-curl": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "dompdf/dompdf": "^3.1",
         "phpmailer/phpmailer": "^6.9"
     },
     "require-dev": {

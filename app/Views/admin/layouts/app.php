@@ -24,6 +24,8 @@ $navItems = [
     ['label' => 'Staff Users', 'icon' => 'fa-user-shield', 'href' => '/admin/users', 'permission' => 'users.manage'],
     ['label' => 'Roles', 'icon' => 'fa-shield-halved', 'href' => '/admin/roles', 'permission' => 'roles.manage'],
     ['label' => 'Audit Log', 'icon' => 'fa-clipboard-list', 'href' => '/admin/audit-logs', 'permission' => 'audit_logs.view'],
+    ['label' => 'Reports', 'icon' => 'fa-chart-line', 'href' => '/admin/reports', 'permission' => 'reports.view'],
+    ['label' => 'Expenses', 'icon' => 'fa-money-bill-wave', 'href' => '/admin/expenses', 'permission' => 'expenses.manage'],
     ['label' => 'Settings', 'icon' => 'fa-gear', 'href' => '/admin/settings', 'permission' => 'settings.manage'],
 ];
 ?>

@@ -112,6 +112,42 @@ final class User extends Model
         self::update($id, ['status' => $status]);
     }
 
+    /**
+     * Customers ranked by total order value within a date range - the
+     * customer report's data source. $limit = 0 means no limit (full
+     * export); the dashboard-sized top-N case isn't currently used
+     * elsewhere but follows the same convention as
+     * OrderItem::bestSellingBetween() for consistency.
+     */
+    public static function topCustomers(string $startDate, string $endDate, int $limit = 0): array
+    {
+        $sql = "SELECT u.id, u.first_name, u.last_name, u.email,
+                       COUNT(o.id) AS order_count,
+                       SUM(o.total) AS total_spent,
+                       MAX(o.created_at) AS last_order_at
+                FROM users u
+                JOIN orders o ON o.user_id = u.id
+                WHERE DATE(o.created_at) BETWEEN :start_date AND :end_date
+                GROUP BY u.id, u.first_name, u.last_name, u.email
+                ORDER BY total_spent DESC";
+
+        if ($limit > 0) {
+            $sql .= ' LIMIT :limit';
+        }
+
+        $stmt = self::db()->prepare($sql);
+        $stmt->bindValue(':start_date', $startDate);
+        $stmt->bindValue(':end_date', $endDate);
+
+        if ($limit > 0) {
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
     public static function countCustomers(): int
     {
         $stmt = self::db()->query(

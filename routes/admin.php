@@ -9,10 +9,12 @@ use App\Controllers\Admin\CategoryController;
 use App\Controllers\Admin\CouponController;
 use App\Controllers\Admin\CustomerController;
 use App\Controllers\Admin\DashboardController;
+use App\Controllers\Admin\ExpenseController;
 use App\Controllers\Admin\InventoryController;
 use App\Controllers\Admin\OrderController;
 use App\Controllers\Admin\ProductController;
 use App\Controllers\Admin\PurchaseOrderController;
+use App\Controllers\Admin\ReportController;
 use App\Controllers\Admin\ReviewController;
 use App\Controllers\Admin\RoleController;
 use App\Controllers\Admin\SettingsController;
@@ -131,4 +133,19 @@ return function (Router $router): void {
     $router->get('/admin/inventory', [InventoryController::class, 'index'], $inventoryPermission);
     $router->get('/admin/inventory/movements', [InventoryController::class, 'movements'], $inventoryPermission);
     $router->post('/admin/inventory/{id}/adjust', [InventoryController::class, 'adjust'], [...$inventoryPermission, VerifyCsrfMiddleware::class]);
+
+    $reportsPermission = [[PermissionMiddleware::class, 'reports.view']];
+    $router->get('/admin/reports', [ReportController::class, 'index'], $reportsPermission);
+    $router->get('/admin/reports/sales', [ReportController::class, 'sales'], $reportsPermission);
+    $router->get('/admin/reports/inventory', [ReportController::class, 'inventory'], $reportsPermission);
+    $router->get('/admin/reports/customers', [ReportController::class, 'customers'], $reportsPermission);
+    $router->get('/admin/reports/products', [ReportController::class, 'products'], $reportsPermission);
+
+    $expensesPermission = [[PermissionMiddleware::class, 'expenses.manage']];
+    $router->get('/admin/expenses', [ExpenseController::class, 'index'], $expensesPermission);
+    $router->get('/admin/expenses/create', [ExpenseController::class, 'create'], $expensesPermission);
+    $router->post('/admin/expenses', [ExpenseController::class, 'store'], [...$expensesPermission, VerifyCsrfMiddleware::class]);
+    $router->get('/admin/expenses/{id}/edit', [ExpenseController::class, 'edit'], $expensesPermission);
+    $router->post('/admin/expenses/{id}', [ExpenseController::class, 'update'], [...$expensesPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/expenses/{id}/delete', [ExpenseController::class, 'destroy'], [...$expensesPermission, VerifyCsrfMiddleware::class]);
 };
