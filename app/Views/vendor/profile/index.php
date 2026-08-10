@@ -1,5 +1,12 @@
 <?php /** @var array $vendor */ ?>
-<h4 class="mb-4" style="color:#f8f7f4;">Store Profile</h4>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="mb-0" style="color:#f8f7f4;">Store Profile</h4>
+    <?php if ($vendor['status'] === 'approved'): ?>
+        <a href="/store/<?= e($vendor['slug']) ?>" target="_blank" class="btn btn-outline-light btn-sm">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> View Public Storefront
+        </a>
+    <?php endif; ?>
+</div>
 
 <form method="POST" action="/vendor/profile" enctype="multipart/form-data" class="row g-3" style="max-width:640px;">
     <?= csrf_field() ?>

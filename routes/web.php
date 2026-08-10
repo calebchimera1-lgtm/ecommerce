@@ -17,6 +17,7 @@ use App\Controllers\Customer\ReviewController;
 use App\Controllers\Customer\ShopController;
 use App\Controllers\Customer\SitemapController;
 use App\Controllers\Customer\StaticController;
+use App\Controllers\Customer\VendorStorefrontController;
 use App\Controllers\Customer\WishlistController;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
@@ -58,6 +59,7 @@ return function (Router $router): void {
     $router->get('/shop/category/{slug}', [ShopController::class, 'category']);
     $router->get('/shop/brand/{slug}', [ShopController::class, 'brand']);
     $router->get('/search', [ShopController::class, 'search']);
+    $router->get('/store/{slug}', [VendorStorefrontController::class, 'show']);
 
     // Product detail + reviews (submitting a review requires being logged in).
     $router->get('/product/{slug}', [ProductController::class, 'show']);

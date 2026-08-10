@@ -118,8 +118,12 @@ payouts):
 - [x] **Module 18** — Order splitting, commission & payouts (mixed-cart
       checkout splits into per-vendor sub-orders, commission calculated
       and frozen at purchase time, manual payout ledger for admin)
+- [x] **Module 19** — Public vendor storefronts (`/store/{slug}` page
+      per vendor, "Sold by X" links from products and order history,
+      fixed a gap where a suspended vendor's products stayed visible)
 
-The marketplace extension (Modules 15-18) is complete: vendors apply,
+The marketplace extension (Modules 15-19) is complete: vendors apply,
 get approved, list and manage their own products under admin review,
-and get their orders split out with commission calculated and payouts
-tracked - on top of the original single-vendor storefront above.
+get their orders split out with commission calculated and payouts
+tracked, and have a public storefront customers can browse - on top of
+the original single-vendor storefront above.

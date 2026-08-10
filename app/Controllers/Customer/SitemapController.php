@@ -10,6 +10,7 @@ use App\Models\BlogPost;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Vendor;
 
 final class SitemapController extends Controller
 {
@@ -36,6 +37,10 @@ final class SitemapController extends Controller
 
         foreach (Product::allActiveForSitemap() as $product) {
             $urls[] = ['loc' => url('/product/' . $product['slug']), 'lastmod' => self::toDate($product['updated_at'])];
+        }
+
+        foreach (Vendor::allApprovedForSitemap() as $vendor) {
+            $urls[] = ['loc' => url('/store/' . $vendor['slug']), 'lastmod' => self::toDate($vendor['updated_at'])];
         }
 
         foreach (BlogPost::allPublishedForSitemap() as $post) {

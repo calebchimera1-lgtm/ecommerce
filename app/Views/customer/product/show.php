@@ -121,6 +121,11 @@ $stockClass = match ($product['stock_status']) {
                     <?php if (!empty($product['barcode'])): ?> &middot; Barcode: <?= e($product['barcode']) ?><?php endif; ?>
                     <?php if ($product['weight_grams'] !== null): ?> &middot; Weight: <?= (int) $product['weight_grams'] ?>g<?php endif; ?>
                 </div>
+                <?php if (!empty($product['vendor_store_name'])): ?>
+                    <div class="mt-2 sans small">
+                        Sold by <a href="/store/<?= e($product['vendor_slug']) ?>" class="text-warning"><?= e($product['vendor_store_name']) ?></a>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 

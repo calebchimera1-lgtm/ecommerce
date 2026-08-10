@@ -245,7 +245,7 @@ final class Product extends Model
         WHERE pi.product_id = p.id ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC LIMIT 1) AS primary_image';
 
     /**
-     * @param array{search?:string,category_id?:string,brand_id?:string,min_price?:string,max_price?:string} $filters
+     * @param array{search?:string,category_id?:string,brand_id?:string,vendor_id?:string,min_price?:string,max_price?:string} $filters
      */
     public static function publicPaginate(int $page, int $perPage, array $filters, string $sort = 'newest'): array
     {
@@ -262,7 +262,8 @@ final class Product extends Model
                        ' . self::PRIMARY_IMAGE_SUBQUERY . '
                 FROM products p
                 LEFT JOIN categories c ON c.id = p.category_id
-                LEFT JOIN brands b ON b.id = p.brand_id'
+                LEFT JOIN brands b ON b.id = p.brand_id
+                LEFT JOIN vendors v ON v.id = p.vendor_id'
               . ($where !== '' ? ' WHERE ' . $where : '')
               . ' ORDER BY ' . $orderBy
               . ' LIMIT :limit OFFSET :offset';
@@ -284,7 +285,8 @@ final class Product extends Model
     public static function publicCount(array $filters): int
     {
         [$where, $bindings] = self::buildPublicWhere($filters);
-        $sql = 'SELECT COUNT(*) AS total FROM products p' . ($where !== '' ? ' WHERE ' . $where : '');
+        $sql = 'SELECT COUNT(*) AS total FROM products p LEFT JOIN vendors v ON v.id = p.vendor_id'
+            . ($where !== '' ? ' WHERE ' . $where : '');
 
         $stmt = self::db()->prepare($sql);
         $stmt->execute($bindings);
@@ -292,9 +294,27 @@ final class Product extends Model
         return (int) $stmt->fetch()['total'];
     }
 
+    /**
+     * Shared by every public-facing product query - besides the
+     * baseline deleted/active/approval-status gates, a product whose
+     * vendor exists is only ever shown while that vendor's own
+     * status is 'approved'. Without this, a customer could still
+     * browse a suspended vendor's previously-approved catalog on the
+     * storefront even though that vendor lost access to their own
+     * portal - the product-level approval gate (Module 17) says
+     * nothing about the seller's current standing, so this needs its
+     * own condition. Platform-owned products (vendor_id NULL) are
+     * unaffected, same as every other vendor-related gate in this
+     * codebase.
+     */
     private static function buildPublicWhere(array $filters): array
     {
-        $conditions = ['p.deleted_at IS NULL', 'p.is_active = 1', "p.approval_status = 'approved'"];
+        $conditions = [
+            'p.deleted_at IS NULL',
+            'p.is_active = 1',
+            "p.approval_status = 'approved'",
+            "(p.vendor_id IS NULL OR v.status = 'approved')",
+        ];
         $bindings = [];
 
         if (($filters['search'] ?? '') !== '') {
@@ -311,6 +331,11 @@ final class Product extends Model
         if (($filters['brand_id'] ?? '') !== '') {
             $conditions[] = 'p.brand_id = :brand_id';
             $bindings['brand_id'] = (int) $filters['brand_id'];
+        }
+
+        if (($filters['vendor_id'] ?? '') !== '') {
+            $conditions[] = 'p.vendor_id = :vendor_id';
+            $bindings['vendor_id'] = (int) $filters['vendor_id'];
         }
 
         if (($filters['min_price'] ?? '') !== '') {
@@ -330,11 +355,14 @@ final class Product extends Model
     {
         $stmt = self::db()->prepare(
             'SELECT p.*, c.name AS category_name, c.slug AS category_slug,
-                    b.name AS brand_name, b.slug AS brand_slug
+                    b.name AS brand_name, b.slug AS brand_slug,
+                    v.store_name AS vendor_store_name, v.slug AS vendor_slug
              FROM products p
              LEFT JOIN categories c ON c.id = p.category_id
              LEFT JOIN brands b ON b.id = p.brand_id
+             LEFT JOIN vendors v ON v.id = p.vendor_id
              WHERE p.slug = :slug AND p.deleted_at IS NULL AND p.is_active = 1 AND p.approval_status = \'approved\'
+                   AND (p.vendor_id IS NULL OR v.status = \'approved\')
              LIMIT 1'
         );
         $stmt->execute(['slug' => $slug]);
@@ -375,7 +403,9 @@ final class Product extends Model
                        ' . self::PRIMARY_IMAGE_SUBQUERY . '
                 FROM products p
                 LEFT JOIN categories c ON c.id = p.category_id
-                WHERE p.deleted_at IS NULL AND p.is_active = 1 AND p.approval_status = \'approved\' AND ' . $extraCondition . '
+                LEFT JOIN vendors v ON v.id = p.vendor_id
+                WHERE p.deleted_at IS NULL AND p.is_active = 1 AND p.approval_status = \'approved\'
+                      AND (p.vendor_id IS NULL OR v.status = \'approved\') AND ' . $extraCondition . '
                 ORDER BY ' . $orderBy . '
                 LIMIT :limit';
 
@@ -394,7 +424,11 @@ final class Product extends Model
     public static function allActiveForSitemap(): array
     {
         $stmt = self::db()->query(
-            "SELECT slug, updated_at FROM products WHERE deleted_at IS NULL AND is_active = 1 AND approval_status = 'approved'"
+            "SELECT p.slug, p.updated_at
+             FROM products p
+             LEFT JOIN vendors v ON v.id = p.vendor_id
+             WHERE p.deleted_at IS NULL AND p.is_active = 1 AND p.approval_status = 'approved'
+                   AND (p.vendor_id IS NULL OR v.status = 'approved')"
         );
 
         return $stmt->fetchAll();

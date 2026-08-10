@@ -29,6 +29,38 @@ final class Vendor extends Model
         return self::findBy('user_id', $userId);
     }
 
+    /**
+     * Public-facing lookup for a vendor's storefront page
+     * (Customer\VendorStorefrontController) - deliberately requires
+     * `status = 'approved'`, so a pending, rejected, or suspended
+     * vendor's slug 404s exactly like a deleted product's would,
+     * rather than exposing a storefront for a seller who isn't
+     * currently allowed to sell.
+     */
+    public static function findActiveBySlug(string $slug): ?array
+    {
+        $stmt = self::db()->prepare(
+            "SELECT * FROM vendors WHERE slug = :slug AND status = 'approved' LIMIT 1"
+        );
+        $stmt->execute(['slug' => $slug]);
+        $row = $stmt->fetch();
+
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * Every approved vendor's slug and last-modified timestamp - the
+     * sitemap's data source, mirroring Product::allActiveForSitemap().
+     */
+    public static function allApprovedForSitemap(): array
+    {
+        $stmt = self::db()->query(
+            "SELECT slug, updated_at FROM vendors WHERE status = 'approved'"
+        );
+
+        return $stmt->fetchAll();
+    }
+
     public static function findWithUser(int $id): ?array
     {
         $stmt = self::db()->prepare(

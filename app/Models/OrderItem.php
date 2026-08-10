@@ -13,14 +13,14 @@ final class OrderItem extends Model
 
     /**
      * Every item on an order, annotated with the selling vendor's
-     * store name where applicable (NULL `vendor_store_name` means the
-     * item is platform-owned) - lets both the admin and customer order
-     * views show "Sold by X" without a separate query.
+     * store name/slug where applicable (NULL `vendor_store_name` means
+     * the item is platform-owned) - lets both the admin and customer
+     * order views show a "Sold by X" link without a separate query.
      */
     public static function forOrder(int $orderId): array
     {
         $stmt = self::db()->prepare(
-            'SELECT oi.*, v.store_name AS vendor_store_name
+            'SELECT oi.*, v.store_name AS vendor_store_name, v.slug AS vendor_slug
              FROM order_items oi
              LEFT JOIN vendor_orders vo ON vo.id = oi.vendor_order_id
              LEFT JOIN vendors v ON v.id = vo.vendor_id

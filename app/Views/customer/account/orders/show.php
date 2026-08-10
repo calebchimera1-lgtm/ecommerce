@@ -79,7 +79,7 @@ $shipmentStatusLabels = [
                             <td>
                                 <?= e($item['product_name']) ?>
                                 <?php if ($item['vendor_store_name'] !== null): ?>
-                                    <br><span class="text-white-50 sans small">Sold by <?= e($item['vendor_store_name']) ?></span>
+                                    <br><span class="text-white-50 sans small">Sold by <a href="/store/<?= e($item['vendor_slug']) ?>" class="text-white-50"><?= e($item['vendor_store_name']) ?></a></span>
                                 <?php endif; ?>
                             </td>
                             <td><?= (int) $item['quantity'] ?></td>
