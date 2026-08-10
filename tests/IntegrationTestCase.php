@@ -27,6 +27,9 @@ abstract class IntegrationTestCase extends BaseTestCase
     protected PDO $db;
 
     private const TRUNCATE_TABLES = [
+        'return_request_status_history',
+        'return_request_items',
+        'return_requests',
         'vendor_order_status_history',
         'order_status_history',
         'payments',

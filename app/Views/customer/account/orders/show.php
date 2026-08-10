@@ -26,7 +26,12 @@ $shipmentStatusLabels = [
                 <h4 class="mb-1">Order <?= e($order['order_number']) ?></h4>
                 <p class="text-white-50 sans small mb-0">Placed <?= e(date('F j, Y', strtotime($order['created_at']))) ?></p>
             </div>
-            <a href="/order/<?= e($order['order_number']) ?>/invoice" class="btn btn-outline-gold btn-sm" target="_blank">View Invoice</a>
+            <div class="d-flex gap-2">
+                <?php if ($order['status'] === 'delivered'): ?>
+                    <a href="/account/orders/<?= e($order['order_number']) ?>/return" class="btn btn-outline-gold btn-sm">Request a Return</a>
+                <?php endif; ?>
+                <a href="/order/<?= e($order['order_number']) ?>/invoice" class="btn btn-outline-gold btn-sm" target="_blank">View Invoice</a>
+            </div>
         </div>
 
         <?php if ($isTerminalException): ?>

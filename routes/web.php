@@ -13,6 +13,7 @@ use App\Controllers\Customer\NewsletterController;
 use App\Controllers\Customer\OrderController;
 use App\Controllers\Customer\ProductController;
 use App\Controllers\Customer\ProfileController;
+use App\Controllers\Customer\ReturnController;
 use App\Controllers\Customer\ReviewController;
 use App\Controllers\Customer\ShopController;
 use App\Controllers\Customer\SitemapController;
@@ -115,6 +116,12 @@ return function (Router $router): void {
     // Order history / tracking.
     $router->get('/account/orders', [OrderController::class, 'history'], [AuthMiddleware::class]);
     $router->get('/account/orders/{orderNumber}', [OrderController::class, 'show'], [AuthMiddleware::class]);
+
+    // Returns / RMA.
+    $router->get('/account/returns', [ReturnController::class, 'index'], [AuthMiddleware::class]);
+    $router->get('/account/returns/{id}', [ReturnController::class, 'show'], [AuthMiddleware::class]);
+    $router->get('/account/orders/{orderNumber}/return', [ReturnController::class, 'create'], [AuthMiddleware::class]);
+    $router->post('/account/orders/{orderNumber}/return', [ReturnController::class, 'store'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
 
     // My Reviews.
     $router->get('/account/reviews', [ReviewController::class, 'index'], [AuthMiddleware::class]);

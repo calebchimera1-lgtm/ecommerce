@@ -18,6 +18,7 @@ use App\Controllers\Admin\PayoutController;
 use App\Controllers\Admin\ProductController;
 use App\Controllers\Admin\PurchaseOrderController;
 use App\Controllers\Admin\ReportController;
+use App\Controllers\Admin\ReturnController;
 use App\Controllers\Admin\ReviewController;
 use App\Controllers\Admin\RoleController;
 use App\Controllers\Admin\SettingsController;
@@ -97,6 +98,12 @@ return function (Router $router): void {
     $router->post('/admin/orders/{id}/shipment', [OrderController::class, 'updateShipment'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/orders/{id}/payment', [OrderController::class, 'markPaid'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/orders/{id}/vendor-orders/{vendorOrderId}/status', [OrderController::class, 'updateVendorOrderStatus'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
+
+    $router->get('/admin/returns', [ReturnController::class, 'index'], $ordersViewPermission);
+    $router->get('/admin/returns/{id}', [ReturnController::class, 'show'], $ordersViewPermission);
+    $router->post('/admin/returns/{id}/approve', [ReturnController::class, 'approve'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/returns/{id}/reject', [ReturnController::class, 'reject'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/returns/{id}/refund', [ReturnController::class, 'refund'], [...$ordersManagePermission, VerifyCsrfMiddleware::class]);
 
     $customersPermission = [[PermissionMiddleware::class, 'customers.manage']];
     $router->get('/admin/customers', [CustomerController::class, 'index'], $customersPermission);

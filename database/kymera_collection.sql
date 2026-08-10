@@ -518,6 +518,65 @@ CREATE TABLE `order_status_history` (
         FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+-- A customer's request to return specific items from a delivered
+-- order. Scoped per order_item (return_request_items), not per whole
+-- order, so a request can cover just one line out of a larger order -
+-- and so a vendor-owned line's return can be traced back to that
+-- vendor's own sub-order via order_items.vendor_order_id without this
+-- table needing to know about vendors at all.
+CREATE TABLE `return_requests` (
+    `id`               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `order_id`         BIGINT UNSIGNED NOT NULL,
+    `user_id`          BIGINT UNSIGNED NOT NULL COMMENT 'The customer who requested the return',
+    `status`           ENUM('pending','approved','rejected','refunded') NOT NULL DEFAULT 'pending',
+    `reason`           VARCHAR(255) NOT NULL COMMENT 'Customer-stated reason for the return',
+    `admin_note`       VARCHAR(255) NULL COMMENT 'Set on approve/reject/refund - required when rejecting',
+    `refunded_amount`  DECIMAL(12,2) NULL,
+    `refunded_at`      TIMESTAMP NULL DEFAULT NULL,
+    `processed_by`     BIGINT UNSIGNED NULL COMMENT 'Admin who last actioned this request',
+    `created_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY `idx_return_requests_order` (`order_id`),
+    KEY `idx_return_requests_user` (`user_id`),
+    KEY `idx_return_requests_status` (`status`),
+    CONSTRAINT `fk_return_requests_order`
+        FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_return_requests_user`
+        FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_return_requests_processed_by`
+        FOREIGN KEY (`processed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE `return_request_items` (
+    `id`                 BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `return_request_id`  BIGINT UNSIGNED NOT NULL,
+    `order_item_id`      BIGINT UNSIGNED NOT NULL,
+    `quantity`           INT UNSIGNED NOT NULL COMMENT 'Units being returned - may be less than the original order_items.quantity',
+    `reason`             VARCHAR(255) NULL COMMENT 'Optional per-item reason (defective, wrong item, etc.)',
+    `restocked`          TINYINT(1) NOT NULL DEFAULT 0,
+    `created_at`         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY `idx_return_request_items_request` (`return_request_id`),
+    KEY `idx_return_request_items_order_item` (`order_item_id`),
+    CONSTRAINT `fk_return_request_items_request`
+        FOREIGN KEY (`return_request_id`) REFERENCES `return_requests` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_return_request_items_order_item`
+        FOREIGN KEY (`order_item_id`) REFERENCES `order_items` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE `return_request_status_history` (
+    `id`                 BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `return_request_id`  BIGINT UNSIGNED NOT NULL,
+    `status`             VARCHAR(30) NOT NULL,
+    `note`               VARCHAR(255) NULL,
+    `changed_by`         BIGINT UNSIGNED NULL COMMENT 'Customer or staff user_id, NULL for system-generated changes',
+    `created_at`         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY `idx_return_request_status_history_request` (`return_request_id`),
+    CONSTRAINT `fk_return_request_status_history_request`
+        FOREIGN KEY (`return_request_id`) REFERENCES `return_requests` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_return_request_status_history_user`
+        FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 -- One row per distinct vendor present in an order - the "split" that
 -- lets each vendor fulfill and get paid for only their own items,
 -- independent of the parent order and any other vendor sharing it.
@@ -626,23 +685,6 @@ CREATE TABLE `shipments` (
     KEY `idx_shipments_order` (`order_id`),
     CONSTRAINT `fk_shipments_order`
         FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE `product_returns` (
-    `id`             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `order_item_id`  BIGINT UNSIGNED NOT NULL,
-    `user_id`        BIGINT UNSIGNED NOT NULL,
-    `reason`         VARCHAR(255) NOT NULL,
-    `status`         ENUM('requested','approved','rejected','refunded') NOT NULL DEFAULT 'requested',
-    `refund_amount`  DECIMAL(12,2) NULL,
-    `created_at`     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    KEY `idx_product_returns_order_item` (`order_item_id`),
-    KEY `idx_product_returns_user` (`user_id`),
-    CONSTRAINT `fk_product_returns_order_item`
-        FOREIGN KEY (`order_item_id`) REFERENCES `order_items` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_product_returns_user`
-        FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- =====================================================================
@@ -916,7 +958,8 @@ INSERT INTO `settings` (`setting_key`, `value`, `group`) VALUES
     ('support_email',    'support@kymeracollection.com', 'general'),
     ('currency_default', 'USD', 'general'),
     ('free_shipping_threshold', '250.00', 'shipping'),
-    ('default_commission_rate', '15.00', 'marketplace');
+    ('default_commission_rate', '15.00', 'marketplace'),
+    ('return_window_days', '14', 'orders');
 
 INSERT INTO `categories` (`name`, `slug`, `description`, `sort_order`) VALUES
     ('Fashion',     'fashion',     'Ready-to-wear apparel for every occasion', 1),

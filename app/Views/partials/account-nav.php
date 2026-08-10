@@ -3,6 +3,7 @@ $accountCurrentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $accountNavItems = [
     ['label' => 'Dashboard', 'href' => '/account'],
     ['label' => 'Orders', 'href' => '/account/orders'],
+    ['label' => 'Returns', 'href' => '/account/returns'],
     ['label' => 'Wishlist', 'href' => '/wishlist'],
     ['label' => 'Reviews', 'href' => '/account/reviews'],
     ['label' => 'Profile', 'href' => '/account/profile'],

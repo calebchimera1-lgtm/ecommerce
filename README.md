@@ -152,7 +152,11 @@ Closing the gaps Module 14 flagged for going live:
       audit across all 96 state-changing routes - 100% coverage
       confirmed, not sampled; found and fixed a real path-traversal
       gap in `ImageUploader::delete()`)
-- [ ] Module 25 — Returns/refunds (RMA) workflow
+- [x] **Module 25** — Returns/refunds (RMA) workflow (per-item return
+      requests on delivered orders, admin approve/reject/refund,
+      restocking + vendor payout clawback that skips already-paid
+      payouts, `orders.payment_status` synced once cumulative refunds
+      cover the order total)
 - [ ] Module 26 — Abandoned cart recovery emails
 - [ ] Module 27 — Multi-currency / regional tax rules
 - [ ] Module 28 — Vendor tiers / Top Rated Seller badges
