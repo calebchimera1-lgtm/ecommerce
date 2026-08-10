@@ -157,7 +157,11 @@ Closing the gaps Module 14 flagged for going live:
       restocking + vendor payout clawback that skips already-paid
       payouts, `orders.payment_status` synced once cumulative refunds
       cover the order total)
-- [ ] Module 26 — Abandoned cart recovery emails
+- [x] **Module 26** — Abandoned cart recovery emails (`bin/send-abandoned-cart-emails.php`,
+      a cron-invoked CLI script - the first time-based, non-request-driven
+      feature in this app; found and fixed a real bug where cart
+      activity detection missed item-only changes since `cart_items`
+      updates never touch the parent `carts` row)
 - [ ] Module 27 — Multi-currency / regional tax rules
 - [ ] Module 28 — Vendor tiers / Top Rated Seller badges
 - [ ] Module 29 — Caching layer for storefront/dashboard queries

@@ -16,7 +16,8 @@ specific codebase.
 
 Nothing else is required - there's no Node/npm build step, no queue
 worker, no cache daemon (see Module 29 in the README's Production
-Readiness section for planned caching work).
+Readiness section for planned caching work). A working `cron` is
+needed for the one scheduled job this app does have (section 10).
 
 ## 2. Get the code and install dependencies
 
@@ -209,7 +210,32 @@ runs this automatically on every push/PR against a throwaway MySQL
 service container - treat a red CI run as a hard blocker, not a
 suggestion.
 
-## 10. Post-deploy checklist
+## 10. Scheduled jobs (cron)
+
+This app has no background scheduler daemon or queue worker - anything
+time-based runs as a plain CLI script under `bin/`, invoked by the
+system crontab. There's one so far:
+
+| Script | Purpose | Suggested schedule |
+|---|---|---|
+| `bin/send-abandoned-cart-emails.php` | Emails a customer whose logged-in cart has sat untouched past `settings.abandoned_cart_threshold_hours` (seeded to 24h) a recovery link back to `/cart`. Safe to run more often than the threshold - a cart is only ever emailed once per idle spell, so an extra run just finds nothing new. | Hourly |
+
+Add an entry to the deploy user's crontab (`crontab -e`), pointing at
+the real PHP binary and the app's actual path:
+
+```cron
+0 * * * * /usr/bin/php /var/www/kymera-collection/bin/send-abandoned-cart-emails.php >> /var/www/kymera-collection/storage/logs/cron.log 2>&1
+```
+
+The script also writes its own summary line to
+`storage/logs/{date}.log` via the app's normal `Logger` on every run
+(`Abandoned cart reminders: N eligible, M sent, ...`), independent of
+where cron redirects stdout - check that file first if a run seems to
+have done nothing. Each script exits non-zero only on an uncaught
+exception (e.g. the database is unreachable); a normal run with zero
+eligible carts exits 0 and logs "0 eligible, 0 sent".
+
+## 11. Post-deploy checklist
 
 - [ ] `.env` has `APP_ENV=production`, `APP_DEBUG=false`
 - [ ] HTTPS is enforced (redirect HTTP → HTTPS at the web server or load balancer)
@@ -218,4 +244,4 @@ suggestion.
 - [ ] At least one payment gateway is configured and test-purchased end-to-end, or COD is intentionally the only option
 - [ ] A real email (not just the log file) was sent and received successfully, if `MAIL_HOST` is set
 - [ ] `composer test` is green
-- [ ] A real cron/scheduler is wired up for anything time-based you've added since (e.g. Module 26's abandoned-cart emails, once built) - this app has no built-in scheduler daemon
+- [ ] `bin/send-abandoned-cart-emails.php` is wired into the system crontab (section 10) - this app has no built-in scheduler daemon, so it silently never runs otherwise

@@ -335,6 +335,7 @@ CREATE TABLE `carts` (
     `session_id`          VARCHAR(100) NULL,
     `coupon_id`           BIGINT UNSIGNED NULL COMMENT 'Coupon applied at the cart stage, before checkout exists',
     `shipping_method_id`  INT UNSIGNED NULL COMMENT 'Shipping method chosen at the cart stage',
+    `reminder_sent_at`    TIMESTAMP NULL DEFAULT NULL COMMENT 'Last abandoned-cart recovery email sent - compared against updated_at so a re-touched cart becomes eligible again',
     `created_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY `idx_carts_user` (`user_id`),
@@ -959,7 +960,8 @@ INSERT INTO `settings` (`setting_key`, `value`, `group`) VALUES
     ('currency_default', 'USD', 'general'),
     ('free_shipping_threshold', '250.00', 'shipping'),
     ('default_commission_rate', '15.00', 'marketplace'),
-    ('return_window_days', '14', 'orders');
+    ('return_window_days', '14', 'orders'),
+    ('abandoned_cart_threshold_hours', '24', 'marketing');
 
 INSERT INTO `categories` (`name`, `slug`, `description`, `sort_order`) VALUES
     ('Fashion',     'fashion',     'Ready-to-wear apparel for every occasion', 1),

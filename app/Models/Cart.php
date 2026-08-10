@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Core\Auth;
 use App\Core\Model;
+use PDO;
 
 final class Cart extends Model
 {
@@ -112,5 +113,52 @@ final class Cart extends Model
     public static function setShippingMethod(int $cartId, ?int $shippingMethodId): bool
     {
         return self::update($cartId, ['shipping_method_id' => $shippingMethodId]);
+    }
+
+    /**
+     * Carts eligible for an abandoned-cart recovery email: belongs to
+     * a logged-in customer (guest carts have no address to email),
+     * still has at least one item (an order-placed cart's items are
+     * cleared, so a converted cart never shows up here), and has sat
+     * untouched for at least $thresholdHours.
+     *
+     * "Touched" is `GREATEST(carts.updated_at, MAX(cart_items.updated_at))`,
+     * not just `carts.updated_at` - adding/changing a cart_items row
+     * never updates its parent carts row (they're separate tables),
+     * so `carts.updated_at` alone only reflects cart-level changes
+     * like a coupon or shipping method, not "the customer added an
+     * item five minutes ago." Caught live: adding an item to a cart
+     * whose `updated_at` was already backdated past the threshold did
+     * not change `carts.updated_at` at all, which would have made a
+     * cart the customer is actively shopping in look abandoned.
+     *
+     * `reminder_sent_at` is compared against that same last-touched
+     * timestamp rather than just checked for NULL, so a cart the
+     * customer comes back to and edits again becomes eligible for a
+     * fresh reminder once it goes idle again.
+     */
+    public static function abandoned(int $thresholdHours): array
+    {
+        $stmt = self::db()->prepare(
+            "SELECT c.*, u.email, u.first_name, u.last_name,
+                    GREATEST(c.updated_at, MAX(ci.updated_at)) AS last_activity_at
+             FROM carts c
+             JOIN users u ON u.id = c.user_id
+             JOIN cart_items ci ON ci.cart_id = c.id
+             WHERE c.user_id IS NOT NULL
+             GROUP BY c.id
+             HAVING last_activity_at <= DATE_SUB(NOW(), INTERVAL :threshold_hours HOUR)
+                AND (c.reminder_sent_at IS NULL OR c.reminder_sent_at < last_activity_at)
+             ORDER BY last_activity_at ASC"
+        );
+        $stmt->bindValue(':threshold_hours', $thresholdHours, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function markReminderSent(int $id): void
+    {
+        self::update($id, ['reminder_sent_at' => date('Y-m-d H:i:s')]);
     }
 }

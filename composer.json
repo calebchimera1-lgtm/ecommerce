@@ -38,6 +38,6 @@
     "scripts": {
         "test": "phpunit --colors=always",
         "cs": "phpcs",
-        "lint": "find app public routes config -name '*.php' -print0 | xargs -0 -n1 php -l"
+        "lint": "find app bin public routes config -name '*.php' -print0 | xargs -0 -n1 php -l"
     }
 }
