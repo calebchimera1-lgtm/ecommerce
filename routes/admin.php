@@ -25,6 +25,7 @@ use App\Controllers\Admin\SupplierController;
 use App\Controllers\Admin\TestimonialController;
 use App\Controllers\Admin\UserController;
 use App\Controllers\Admin\VendorController;
+use App\Controllers\Admin\VendorReviewController;
 use App\Core\Response;
 use App\Core\Router;
 use App\Middleware\AdminMiddleware;
@@ -118,6 +119,10 @@ return function (Router $router): void {
     $router->get('/admin/reviews', [ReviewController::class, 'index'], $reviewsPermission);
     $router->post('/admin/reviews/{id}/approve', [ReviewController::class, 'approve'], [...$reviewsPermission, VerifyCsrfMiddleware::class]);
     $router->post('/admin/reviews/{id}/delete', [ReviewController::class, 'destroy'], [...$reviewsPermission, VerifyCsrfMiddleware::class]);
+
+    $router->get('/admin/vendor-reviews', [VendorReviewController::class, 'index'], $reviewsPermission);
+    $router->post('/admin/vendor-reviews/{id}/approve', [VendorReviewController::class, 'approve'], [...$reviewsPermission, VerifyCsrfMiddleware::class]);
+    $router->post('/admin/vendor-reviews/{id}/delete', [VendorReviewController::class, 'destroy'], [...$reviewsPermission, VerifyCsrfMiddleware::class]);
 
     $router->get('/admin/audit-logs', [AuditLogController::class, 'index'], [[PermissionMiddleware::class, 'audit_logs.view']]);
 

@@ -36,6 +36,27 @@ final class VendorOrder extends Model
     }
 
     /**
+     * Whether a customer has at least one delivered sub-order from
+     * this vendor - the purchase-verification gate for
+     * VendorReview::userHasReviewed()'s counterpart, "is this user
+     * even allowed to review this vendor at all". Joins through
+     * `orders` since a vendor_orders row only carries the parent
+     * order's id, not the customer who placed it.
+     */
+    public static function hasDeliveredOrderForUser(int $vendorId, int $userId): bool
+    {
+        $stmt = self::db()->prepare(
+            "SELECT COUNT(*) AS total
+             FROM vendor_orders vo
+             JOIN orders o ON o.id = vo.order_id
+             WHERE vo.vendor_id = :vendor_id AND o.user_id = :user_id AND vo.status = 'delivered'"
+        );
+        $stmt->execute(['vendor_id' => $vendorId, 'user_id' => $userId]);
+
+        return (int) $stmt->fetch()['total'] > 0;
+    }
+
+    /**
      * A single vendor sub-order, but only if it belongs to this vendor
      * - the ownership check every vendor-portal order action goes
      * through, so a vendor can never reach another vendor's sub-order

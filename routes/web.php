@@ -60,6 +60,7 @@ return function (Router $router): void {
     $router->get('/shop/brand/{slug}', [ShopController::class, 'brand']);
     $router->get('/search', [ShopController::class, 'search']);
     $router->get('/store/{slug}', [VendorStorefrontController::class, 'show']);
+    $router->post('/store/{slug}/reviews', [VendorStorefrontController::class, 'storeReview'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
 
     // Product detail + reviews (submitting a review requires being logged in).
     $router->get('/product/{slug}', [ProductController::class, 'show']);
@@ -120,6 +121,9 @@ return function (Router $router): void {
     $router->get('/account/reviews/{id}/edit', [ReviewController::class, 'edit'], [AuthMiddleware::class]);
     $router->post('/account/reviews/{id}', [ReviewController::class, 'update'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
     $router->post('/account/reviews/{id}/delete', [ReviewController::class, 'destroy'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->get('/account/reviews/vendor/{id}/edit', [ReviewController::class, 'editVendor'], [AuthMiddleware::class]);
+    $router->post('/account/reviews/vendor/{id}', [ReviewController::class, 'updateVendor'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
+    $router->post('/account/reviews/vendor/{id}/delete', [ReviewController::class, 'destroyVendor'], [AuthMiddleware::class, VerifyCsrfMiddleware::class]);
 
     // Profile + password + address book.
     $router->get('/account/profile', [ProfileController::class, 'index'], [AuthMiddleware::class]);

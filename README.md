@@ -124,13 +124,13 @@ payouts):
 - [x] **Module 20** — Vendor analytics dashboard (sales trend,
       order-status breakdown, and best-sellers, scoped to each vendor's
       own store - the vendor-side counterpart to Module 9)
+- [x] **Module 21** — Vendor ratings & reviews (customers rate a
+      vendor as a seller after a delivered order, gated separately
+      from product reviews, moderated the same way)
 
-The marketplace extension (Modules 15-20) is complete: vendors apply,
+The marketplace extension (Modules 15-21) is complete: vendors apply,
 get approved, list and manage their own products under admin review,
 get their orders split out with commission calculated and payouts
-tracked, have a public storefront customers can browse, and can see
-how their store is performing - on top of the original single-vendor
-storefront above.
-
-Discussed but not scheduled: vendor ratings & reviews (separate from
-product reviews).
+tracked, have a public storefront customers can browse and rate, and
+can see how their store is performing - on top of the original
+single-vendor storefront above.

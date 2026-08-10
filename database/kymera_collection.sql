@@ -563,6 +563,33 @@ CREATE TABLE `vendor_order_status_history` (
         FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+-- Ratings for a vendor as a seller, distinct from product_reviews
+-- (which rate a specific item). One review per customer per vendor,
+-- gated in application code (not enforceable as a table constraint)
+-- on having at least one delivered vendor_orders row with that vendor
+-- - see VendorOrder::hasDeliveredOrderForUser().
+CREATE TABLE `vendor_reviews` (
+    `id`              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `vendor_id`       BIGINT UNSIGNED NOT NULL,
+    `user_id`         BIGINT UNSIGNED NOT NULL,
+    `vendor_order_id` BIGINT UNSIGNED NULL COMMENT 'The delivered vendor sub-order that earned the right to review - kept for traceability, not re-checked after the fact',
+    `rating`          TINYINT UNSIGNED NOT NULL COMMENT '1-5',
+    `title`           VARCHAR(191) NULL,
+    `comment`         TEXT NULL,
+    `is_approved`     TINYINT(1)   NOT NULL DEFAULT 0,
+    `created_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_vendor_reviews_vendor_user` (`vendor_id`, `user_id`),
+    KEY `idx_vendor_reviews_vendor` (`vendor_id`),
+    CONSTRAINT `chk_vendor_reviews_rating` CHECK (`rating` BETWEEN 1 AND 5),
+    CONSTRAINT `fk_vendor_reviews_vendor`
+        FOREIGN KEY (`vendor_id`) REFERENCES `vendors` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_vendor_reviews_user`
+        FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_vendor_reviews_vendor_order`
+        FOREIGN KEY (`vendor_order_id`) REFERENCES `vendor_orders` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 -- Abstract payment record. `gateway` + `payload` let any future gateway
 -- (Stripe, PayPal, M-Pesa, Visa/Mastercard via a processor) plug in
 -- without schema changes - see app/Services/Payment for the interface.

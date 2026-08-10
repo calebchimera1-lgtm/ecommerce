@@ -23,6 +23,7 @@ $navItems = [
     ['label' => 'Vendors', 'icon' => 'fa-store', 'href' => '/admin/vendors', 'permission' => 'vendors.manage'],
     ['label' => 'Payouts', 'icon' => 'fa-sack-dollar', 'href' => '/admin/payouts', 'permission' => 'vendors.manage'],
     ['label' => 'Reviews', 'icon' => 'fa-star', 'href' => '/admin/reviews', 'permission' => 'reviews.manage'],
+    ['label' => 'Vendor Reviews', 'icon' => 'fa-comment-dots', 'href' => '/admin/vendor-reviews', 'permission' => 'reviews.manage'],
     ['label' => 'Blog Posts', 'icon' => 'fa-newspaper', 'href' => '/admin/blog-posts', 'permission' => 'blog.manage'],
     ['label' => 'Blog Categories', 'icon' => 'fa-folder-tree', 'href' => '/admin/blog-categories', 'permission' => 'blog.manage'],
     ['label' => 'Testimonials', 'icon' => 'fa-quote-left', 'href' => '/admin/testimonials', 'permission' => 'blog.manage'],
