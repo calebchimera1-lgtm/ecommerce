@@ -26,9 +26,16 @@ final class VendorController extends Controller
             'search' => trim((string) $request->query('search', '')),
         ];
 
+        $vendors = Vendor::paginateAdmin($page, self::PER_PAGE, $filters);
+
+        foreach ($vendors as &$vendor) {
+            $vendor['tier'] = Vendor::tierLabel((int) $vendor['review_count'], (float) $vendor['average_rating']);
+        }
+        unset($vendor);
+
         $this->view('admin/vendors/index', [
             'pageTitle' => 'Vendors | Kymera Collection Admin',
-            'vendors' => Vendor::paginateAdmin($page, self::PER_PAGE, $filters),
+            'vendors' => $vendors,
             'filters' => $filters,
             'statuses' => self::STATUSES,
             'page' => $page,
@@ -40,10 +47,12 @@ final class VendorController extends Controller
     public function show(Request $request): void
     {
         $vendor = $this->loadVendor($request);
+        $tier = Vendor::tierLabel((int) $vendor['review_count'], (float) $vendor['average_rating']);
 
         $this->view('admin/vendors/show', [
             'pageTitle' => $vendor['store_name'] . ' | Kymera Collection Admin',
             'vendor' => $vendor,
+            'tier' => $tier,
         ], 'admin/layouts/app');
     }
 

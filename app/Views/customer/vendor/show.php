@@ -1,7 +1,7 @@
 <?php
 /**
  * @var array $vendor @var array $products @var int $total @var string $sort @var int $page @var int $perPage
- * @var array $reviews @var array{count:int,average:float} $ratingSummary @var bool $canReview @var bool $isLoggedIn
+ * @var array $reviews @var array{count:int,average:float} $ratingSummary @var ?string $tier @var bool $canReview @var bool $isLoggedIn
  */
 $sortOptions = [
     'newest' => 'Newest',
@@ -24,7 +24,14 @@ $sortOptions = [
             <?php endif; ?>
             <div>
                 <div class="section-eyebrow">Kymera Collection Marketplace Seller</div>
-                <h1 class="section-title mb-1"><?= e($vendor['store_name']) ?></h1>
+                <h1 class="section-title mb-1">
+                    <?= e($vendor['store_name']) ?>
+                    <?php if ($tier !== null): ?>
+                        <span class="badge bg-warning text-dark ms-2 align-middle" style="font-size:0.55em;vertical-align:middle;">
+                            <i class="fa-solid fa-award"></i> <?= e($tier) ?>
+                        </span>
+                    <?php endif; ?>
+                </h1>
                 <div class="sans small mb-1">
                     <?php for ($i = 1; $i <= 5; $i++): ?>
                         <i class="fa-<?= $i <= round($ratingSummary['average']) ? 'solid' : 'regular' ?> fa-star text-warning small"></i>

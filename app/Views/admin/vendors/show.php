@@ -1,4 +1,4 @@
-<?php /** @var array $vendor */
+<?php /** @var array $vendor @var ?string $tier */
 $badge = match ($vendor['status']) {
     'approved' => 'bg-success',
     'rejected' => 'bg-danger',
@@ -10,6 +10,12 @@ $badge = match ($vendor['status']) {
     <div>
         <h4 class="mb-1" style="color:#f8f7f4;"><?= e($vendor['store_name']) ?></h4>
         <span class="badge <?= $badge ?>"><?= e(ucfirst($vendor['status'])) ?></span>
+        <?php if ($tier !== null): ?>
+            <span class="badge bg-warning text-dark"><i class="fa-solid fa-award"></i> <?= e($tier) ?></span>
+        <?php endif; ?>
+        <span class="text-white-50 small ms-1">
+            <?= number_format((float) $vendor['average_rating'], 1) ?> avg &middot; <?= (int) $vendor['review_count'] ?> review<?= (int) $vendor['review_count'] === 1 ? '' : 's' ?>
+        </span>
     </div>
     <div class="d-flex gap-2">
         <a href="/admin/payouts/<?= (int) $vendor['id'] ?>" class="btn btn-outline-light btn-sm">Payout Ledger</a>

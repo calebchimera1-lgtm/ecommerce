@@ -167,7 +167,10 @@ Closing the gaps Module 14 flagged for going live:
       stay authoritative USD by design; `TaxRate` now prefers a
       state-specific rate over the flat country rate, e.g. California
       8.75% vs the old blanket 8% US rate)
-- [ ] Module 28 — Vendor tiers / Top Rated Seller badges
+- [x] **Module 28** — Vendor tiers / Top Rated Seller badges (computed
+      live from Module 21's approved vendor ratings, no denormalized
+      column - "Top Rated Seller" requires both ≥5 reviews and ≥4.5
+      average so review volume alone or one lucky rating can't earn it)
 - [ ] Module 29 — Caching layer for storefront/dashboard queries
 
 Payment gateway and SMTP credentials remain configuration-only

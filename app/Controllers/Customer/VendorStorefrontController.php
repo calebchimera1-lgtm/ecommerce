@@ -44,6 +44,8 @@ final class VendorStorefrontController extends Controller
             && !VendorReview::userHasReviewed((int) $vendor['id'], (int) $currentUser['id'])
             && VendorOrder::hasDeliveredOrderForUser((int) $vendor['id'], (int) $currentUser['id']);
 
+        $ratingSummary = VendorReview::ratingSummary((int) $vendor['id']);
+
         $this->view('customer/vendor/show', [
             'pageTitle' => $vendor['store_name'] . ' | Kymera Collection',
             'metaDescription' => $vendor['description'],
@@ -54,7 +56,8 @@ final class VendorStorefrontController extends Controller
             'page' => $page,
             'perPage' => self::PER_PAGE,
             'reviews' => VendorReview::approvedForVendor((int) $vendor['id']),
-            'ratingSummary' => VendorReview::ratingSummary((int) $vendor['id']),
+            'ratingSummary' => $ratingSummary,
+            'tier' => Vendor::tierLabel($ratingSummary['count'], $ratingSummary['average']),
             'canReview' => $canReview,
             'isLoggedIn' => $currentUser !== null,
         ], 'customer/layouts/site');

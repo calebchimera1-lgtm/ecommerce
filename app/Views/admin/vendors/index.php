@@ -27,13 +27,14 @@
                 <th>Owner</th>
                 <th>Email</th>
                 <th>Status</th>
+                <th>Tier</th>
                 <th>Applied</th>
                 <th class="text-end">Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($vendors)): ?>
-                <tr><td colspan="6" class="text-white-50">No vendors found.</td></tr>
+                <tr><td colspan="7" class="text-white-50">No vendors found.</td></tr>
             <?php endif; ?>
             <?php foreach ($vendors as $vendor): ?>
                 <tr>
@@ -50,6 +51,13 @@
                         };
                         ?>
                         <span class="badge <?= $badge ?>"><?= e(ucfirst($vendor['status'])) ?></span>
+                    </td>
+                    <td>
+                        <?php if ($vendor['tier'] !== null): ?>
+                            <span class="badge bg-warning text-dark"><i class="fa-solid fa-award"></i> <?= e($vendor['tier']) ?></span>
+                        <?php else: ?>
+                            <span class="text-white-50 small">&mdash;</span>
+                        <?php endif; ?>
                     </td>
                     <td class="text-white-50"><?= e(date('M j, Y', strtotime($vendor['created_at']))) ?></td>
                     <td class="text-end">

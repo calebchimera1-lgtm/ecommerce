@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Models;
 
 use App\Models\Vendor;
+use App\Models\VendorReview;
 use Tests\Support\Factory;
 use Tests\TestCase;
 
@@ -86,5 +87,49 @@ final class VendorTest extends TestCase
 
         Vendor::reactivate((int) $vendor['id']);
         $this->assertSame('approved', Vendor::find((int) $vendor['id'])['status']);
+    }
+
+    public function test_tier_label_requires_both_a_minimum_review_count_and_average(): void
+    {
+        $this->assertNull(Vendor::tierLabel(0, 0.0), 'No reviews at all should carry no badge.');
+        $this->assertSame('Rising Seller', Vendor::tierLabel(1, 5.0), 'One glowing review is Rising, not Top Rated - a single review is not enough sample size.');
+        $this->assertSame('Top Rated Seller', Vendor::tierLabel(5, 4.5));
+        $this->assertNull(Vendor::tierLabel(10, 3.0), 'A high review count with a mediocre average earns no badge.');
+        $this->assertNull(Vendor::tierLabel(0, 5.0), 'A perfect average with zero reviews earns no badge - there is nothing to average.');
+    }
+
+    public function test_tier_label_boundary_values(): void
+    {
+        $this->assertSame('Top Rated Seller', Vendor::tierLabel(5, 4.5), 'Exactly at the Top Rated threshold should qualify.');
+        $this->assertSame('Rising Seller', Vendor::tierLabel(4, 4.5), 'One review short of Top Rated should fall back to Rising.');
+        $this->assertSame('Rising Seller', Vendor::tierLabel(1, 4.0), 'Exactly at the Rising threshold should qualify.');
+        $this->assertNull(Vendor::tierLabel(1, 3.9), 'Just under the Rising threshold should earn no badge.');
+    }
+
+    public function test_find_with_user_reports_the_real_approved_review_count_and_average(): void
+    {
+        ['vendor' => $vendor] = Factory::vendor('approved');
+        $reviewerA = Factory::customer();
+        $reviewerB = Factory::customer();
+        $reviewerC = Factory::customer();
+
+        VendorReview::create([
+            'vendor_id' => $vendor['id'], 'user_id' => $reviewerA['id'], 'vendor_order_id' => null,
+            'rating' => 5, 'title' => null, 'comment' => null, 'is_approved' => 1,
+        ]);
+        VendorReview::create([
+            'vendor_id' => $vendor['id'], 'user_id' => $reviewerB['id'], 'vendor_order_id' => null,
+            'rating' => 3, 'title' => null, 'comment' => null, 'is_approved' => 1,
+        ]);
+        // Pending (not yet approved) - must not count toward the average.
+        VendorReview::create([
+            'vendor_id' => $vendor['id'], 'user_id' => $reviewerC['id'], 'vendor_order_id' => null,
+            'rating' => 1, 'title' => null, 'comment' => null, 'is_approved' => 0,
+        ]);
+
+        $fresh = Vendor::findWithUser((int) $vendor['id']);
+
+        $this->assertSame(2, (int) $fresh['review_count']);
+        $this->assertSame(4.0, (float) $fresh['average_rating']);
     }
 }

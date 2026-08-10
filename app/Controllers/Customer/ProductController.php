@@ -13,6 +13,8 @@ use App\Models\Product;
 use App\Models\ProductAttribute;
 use App\Models\ProductImage;
 use App\Models\ProductReview;
+use App\Models\Vendor;
+use App\Models\VendorReview;
 use App\Models\Wishlist;
 
 final class ProductController extends Controller
@@ -51,6 +53,13 @@ final class ProductController extends Controller
             4
         );
 
+        $vendorTier = null;
+
+        if ($product['vendor_id'] !== null) {
+            $vendorRatingSummary = VendorReview::ratingSummary((int) $product['vendor_id']);
+            $vendorTier = Vendor::tierLabel($vendorRatingSummary['count'], $vendorRatingSummary['average']);
+        }
+
         $this->view('customer/product/show', [
             'pageTitle' => ($product['meta_title'] ?? $product['name']) . ' | Kymera Collection',
             'metaDescription' => $product['meta_description'] ?? $product['short_description'] ?? mb_substr(strip_tags((string) $product['description']), 0, 160),
@@ -60,6 +69,7 @@ final class ProductController extends Controller
             'specifications' => $product['specifications'] !== null ? (json_decode($product['specifications'], true) ?? []) : [],
             'reviews' => ProductReview::approvedForProduct((int) $product['id']),
             'ratingSummary' => ProductReview::ratingSummary((int) $product['id']),
+            'vendorTier' => $vendorTier,
             'canReview' => $canReview,
             'isLoggedIn' => $currentUser !== null,
             'isWishlisted' => $isWishlisted,

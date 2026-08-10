@@ -19,6 +19,44 @@ final class Vendor extends Model
 {
     protected static string $table = 'vendors';
 
+    /**
+     * Module 28 tier thresholds - a vendor needs both a minimum review
+     * count and a minimum average to earn a badge, so a single 5-star
+     * review can't make a brand-new seller look "Top Rated." Purely a
+     * display classification computed from VendorReview::ratingSummary()
+     * (or the equivalent review_count/average_rating columns joined in
+     * paginateAdmin()/findWithUser() below) - nothing about a vendor's
+     * approval status, commission rate, or payout eligibility changes
+     * based on tier.
+     */
+    private const TOP_RATED_MIN_REVIEWS = 5;
+    private const TOP_RATED_MIN_AVERAGE = 4.5;
+    private const RISING_MIN_REVIEWS = 1;
+    private const RISING_MIN_AVERAGE = 4.0;
+
+    /**
+     * Correlated subqueries computing each vendor's approved-review
+     * count/average directly in the same query - avoids an N+1 query
+     * per row in the admin vendor list, mirroring how Product.php's
+     * PRIMARY_IMAGE_SUBQUERY does the same thing for a product's image.
+     */
+    private const RATING_SUBQUERIES = '
+        (SELECT COUNT(*) FROM vendor_reviews vr WHERE vr.vendor_id = v.id AND vr.is_approved = 1) AS review_count,
+        (SELECT COALESCE(AVG(vr2.rating), 0) FROM vendor_reviews vr2 WHERE vr2.vendor_id = v.id AND vr2.is_approved = 1) AS average_rating';
+
+    public static function tierLabel(int $reviewCount, float $averageRating): ?string
+    {
+        if ($reviewCount >= self::TOP_RATED_MIN_REVIEWS && $averageRating >= self::TOP_RATED_MIN_AVERAGE) {
+            return 'Top Rated Seller';
+        }
+
+        if ($reviewCount >= self::RISING_MIN_REVIEWS && $averageRating >= self::RISING_MIN_AVERAGE) {
+            return 'Rising Seller';
+        }
+
+        return null;
+    }
+
     public static function generateSlug(string $storeName, ?int $ignoreId = null): string
     {
         return self::uniqueSlug(Str::slug($storeName), $ignoreId);
@@ -64,7 +102,8 @@ final class Vendor extends Model
     public static function findWithUser(int $id): ?array
     {
         $stmt = self::db()->prepare(
-            'SELECT v.*, u.email, u.first_name, u.last_name, u.status AS user_status
+            'SELECT v.*, u.email, u.first_name, u.last_name, u.status AS user_status,
+                    ' . self::RATING_SUBQUERIES . '
              FROM vendors v
              JOIN users u ON u.id = v.user_id
              WHERE v.id = :id LIMIT 1'
@@ -84,7 +123,8 @@ final class Vendor extends Model
         $offset = (max(1, $page) - 1) * $perPage;
 
         $stmt = self::db()->prepare(
-            "SELECT v.*, u.email, u.first_name, u.last_name
+            "SELECT v.*, u.email, u.first_name, u.last_name,
+                    " . self::RATING_SUBQUERIES . "
              FROM vendors v
              JOIN users u ON u.id = v.user_id
              {$where}

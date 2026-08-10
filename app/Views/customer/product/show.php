@@ -2,7 +2,7 @@
 /**
  * @var array $product @var array $images @var array $groupedAttributes @var array $specifications
  * @var array $reviews @var array{count:int,average:float} $ratingSummary @var bool $canReview
- * @var bool $isLoggedIn @var bool $isWishlisted @var array $relatedProducts
+ * @var bool $isLoggedIn @var bool $isWishlisted @var array $relatedProducts @var ?string $vendorTier
  */
 $hasSale = $product['sale_price'] !== null;
 $stockLabel = match ($product['stock_status']) {
@@ -127,6 +127,9 @@ $stockClass = match ($product['stock_status']) {
                 <?php if (!empty($product['vendor_store_name'])): ?>
                     <div class="mt-2 sans small">
                         Sold by <a href="/store/<?= e($product['vendor_slug']) ?>" class="text-warning"><?= e($product['vendor_store_name']) ?></a>
+                        <?php if ($vendorTier !== null): ?>
+                            <span class="badge bg-warning text-dark ms-1"><i class="fa-solid fa-award"></i> <?= e($vendorTier) ?></span>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
