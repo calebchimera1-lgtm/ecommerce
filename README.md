@@ -134,3 +134,37 @@ get their orders split out with commission calculated and payouts
 tracked, have a public storefront customers can browse and rate, and
 can see how their store is performing - on top of the original
 single-vendor storefront above.
+
+## Production readiness
+
+Closing the gaps Module 14 flagged for going live:
+
+- [x] **Module 22** — Automated test suite (PHPUnit, dedicated
+      `kymera_collection_test` database, 57 tests covering the
+      riskiest logic: order splitting/commission math, public
+      visibility gating including the Module 19 suspended-vendor
+      regression, and validation/cart-math edge cases)
+- [ ] Module 23 — CI pipeline + deployment docs
+- [ ] Module 24 — Security review pass
+- [ ] Module 25 — Returns/refunds (RMA) workflow
+- [ ] Module 26 — Abandoned cart recovery emails
+- [ ] Module 27 — Multi-currency / regional tax rules
+- [ ] Module 28 — Vendor tiers / Top Rated Seller badges
+- [ ] Module 29 — Caching layer for storefront/dashboard queries
+
+Payment gateway and SMTP credentials remain configuration-only
+(`.env` - see the Stripe/PayPal/M-Pesa/`MAIL_*` keys there) - this
+batch scaffolds and documents what's needed rather than supplying real
+secrets, which only the deploying party can provide.
+
+### Running tests
+
+```
+composer test
+```
+
+Points itself at a separate `kymera_collection_test` database (never
+your dev data), auto-creating and seeding it from
+`database/kymera_collection.sql` on first run. See
+[`docs/MODULE_22_AUTOMATED_TEST_SUITE.md`](docs/MODULE_22_AUTOMATED_TEST_SUITE.md)
+for the test database strategy and what's covered.

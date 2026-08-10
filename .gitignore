@@ -39,6 +39,10 @@ Thumbs.db
 ## Composer
 composer.lock
 
+## PHPUnit
+/.phpunit.cache/
+/.phpunit.result.cache
+
 ## Backups / dumps
 *.sql.bak
 *.zip
