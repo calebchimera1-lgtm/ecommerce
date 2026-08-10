@@ -7,6 +7,7 @@ use App\Controllers\Customer\AuthController;
 use App\Controllers\Customer\BlogController;
 use App\Controllers\Customer\CartController;
 use App\Controllers\Customer\CheckoutController;
+use App\Controllers\Customer\CurrencyController;
 use App\Controllers\Customer\DashboardController;
 use App\Controllers\Customer\HomeController;
 use App\Controllers\Customer\NewsletterController;
@@ -33,6 +34,7 @@ use App\Middleware\VerifyCsrfMiddleware;
 return function (Router $router): void {
     $router->get('/', [HomeController::class, 'index']);
     $router->get('/health', [HomeController::class, 'health']);
+    $router->get('/currency/{code}', [CurrencyController::class, 'set']);
 
     // Guest-only auth pages (redirect already-logged-in users to /account).
     $router->get('/register', [AuthController::class, 'showRegister'], [GuestMiddleware::class]);

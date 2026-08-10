@@ -63,10 +63,13 @@ $stockClass = match ($product['stock_status']) {
 
                 <div class="mb-3">
                     <?php if ($hasSale): ?>
-                        <span class="fs-3 text-warning"><?= money($product['sale_price']) ?></span>
-                        <span class="fs-6 text-decoration-line-through text-white-50 ms-2"><?= money($product['price']) ?></span>
+                        <span class="fs-3 text-warning"><?= displayPrice($product['sale_price']) ?></span>
+                        <span class="fs-6 text-decoration-line-through text-white-50 ms-2"><?= displayPrice($product['price']) ?></span>
                     <?php else: ?>
-                        <span class="fs-3"><?= money($product['price']) ?></span>
+                        <span class="fs-3"><?= displayPrice($product['price']) ?></span>
+                    <?php endif; ?>
+                    <?php if (currentCurrency()['code'] !== 'USD'): ?>
+                        <p class="text-white-50 small mb-0 mt-1">Estimated in <?= e(currentCurrency()['code']) ?> - you'll be charged in USD at checkout.</p>
                     <?php endif; ?>
                 </div>
 
@@ -89,7 +92,7 @@ $stockClass = match ($product['stock_status']) {
                                         <?php foreach ($options as $option): ?>
                                             <option value="<?= (int) $option['id'] ?>">
                                                 <?= e($attributeName) ?>: <?= e($option['attribute_value']) ?>
-                                                <?php if ((float) $option['price_modifier'] > 0): ?> (+<?= money($option['price_modifier']) ?>)<?php endif; ?>
+                                                <?php if ((float) $option['price_modifier'] > 0): ?> (+<?= displayPrice($option['price_modifier']) ?>)<?php endif; ?>
                                                 <?= (int) $option['stock_quantity'] === 0 ? ' - Out of stock' : '' ?>
                                             </option>
                                         <?php endforeach; ?>

@@ -107,7 +107,7 @@ final class CheckoutController extends Controller
         }
 
         [$coupon, $shippingMethod] = $this->resolveCartExtras($cart);
-        $taxRate = TaxRate::forCountry($shippingAddress['country']);
+        $taxRate = TaxRate::forAddress($shippingAddress['country'], $shippingAddress['state']);
 
         $paymentInput = match ($paymentMethod) {
             'stripe' => ['payment_method' => (string) $request->input('stripe_payment_method', '')],

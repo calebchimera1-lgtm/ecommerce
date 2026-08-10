@@ -425,6 +425,17 @@ CREATE TABLE `tax_rates` (
     `updated_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+CREATE TABLE `currencies` (
+    `code`            CHAR(3) PRIMARY KEY COMMENT 'ISO 4217 code, e.g. USD',
+    `name`            VARCHAR(50) NOT NULL,
+    `symbol`          VARCHAR(5) NOT NULL,
+    `exchange_rate`   DECIMAL(12,6) NOT NULL COMMENT 'Units of this currency per 1 USD - manually maintained, not live',
+    `is_active`       TINYINT(1) NOT NULL DEFAULT 1,
+    `is_default`      TINYINT(1) NOT NULL DEFAULT 0,
+    `created_at`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
 -- =====================================================================
 -- 6. Orders, order items, addresses, payments, tracking, returns
 -- =====================================================================
@@ -951,7 +962,15 @@ INSERT INTO `shipping_methods` (`name`, `description`, `cost`, `estimated_days`)
 INSERT INTO `tax_rates` (`name`, `rate`, `country`, `state`, `is_active`) VALUES
     ('US Standard Sales Tax', 8.00, 'United States', NULL, 1),
     ('Kenya VAT',            16.00, 'Kenya',         NULL, 1),
-    ('UK VAT',               20.00, 'United Kingdom', NULL, 1);
+    ('UK VAT',               20.00, 'United Kingdom', NULL, 1),
+    ('California Sales Tax',  8.75, 'United States', 'California', 1),
+    ('New York Sales Tax',    8.00, 'United States', 'New York',   1);
+
+INSERT INTO `currencies` (`code`, `name`, `symbol`, `exchange_rate`, `is_active`, `is_default`) VALUES
+    ('USD', 'US Dollar',        '$',    1.000000, 1, 1),
+    ('KES', 'Kenyan Shilling',  'KSh ', 129.500000, 1, 0),
+    ('GBP', 'British Pound',    '£',    0.780000, 1, 0),
+    ('EUR', 'Euro',             '€',    0.920000, 1, 0);
 
 INSERT INTO `settings` (`setting_key`, `value`, `group`) VALUES
     ('site_name',        'Kymera Collection', 'general'),

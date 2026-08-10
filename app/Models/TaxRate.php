@@ -26,17 +26,29 @@ final class TaxRate extends Model
     }
 
     /**
-     * Called once checkout actually knows the shipping country, so the
+     * Called once checkout actually knows the shipping address, so the
      * final order uses a jurisdiction-matched rate instead of the
-     * cart page's placeholder estimate. Falls back to the default rate
-     * if no rate is configured for that country.
+     * cart page's placeholder estimate. A state-specific row (e.g. US
+     * state sales tax, which varies far more than country-level VAT)
+     * is preferred over the country-wide rate when both the country
+     * and the free-text $state match; otherwise falls back to the
+     * country-level rate (state IS NULL), then the global default if
+     * the country itself has no configured rate at all. $state is
+     * matched case-/whitespace-insensitively since checkout collects
+     * it as free text, not a fixed list of codes - a known limitation
+     * (no "CA" vs "California" normalization) documented in
+     * docs/MODULE_27_MULTI_CURRENCY_REGIONAL_TAX.md.
      */
-    public static function forCountry(string $country): ?array
+    public static function forAddress(string $country, ?string $state = null): ?array
     {
         $stmt = self::db()->prepare(
-            'SELECT * FROM tax_rates WHERE is_active = 1 AND country = :country ORDER BY id ASC LIMIT 1'
+            'SELECT * FROM tax_rates
+             WHERE is_active = 1 AND country = :country
+               AND (state IS NULL OR LOWER(TRIM(state)) = LOWER(TRIM(:state)))
+             ORDER BY (state IS NOT NULL) DESC, id ASC
+             LIMIT 1'
         );
-        $stmt->execute(['country' => $country]);
+        $stmt->execute(['country' => $country, 'state' => $state ?? '']);
         $row = $stmt->fetch();
 
         return $row !== false ? $row : self::defaultRate();

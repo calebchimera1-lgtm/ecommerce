@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Core\Csrf;
 use App\Core\Session;
+use App\Models\Currency;
 
 /**
  * Global helper functions, autoloaded via composer.json's "files"
@@ -80,5 +81,50 @@ if (!function_exists('money')) {
         $symbol = $symbols[$currency] ?? $currency . ' ';
 
         return $symbol . number_format((float) $amount, 2);
+    }
+}
+
+if (!function_exists('currentCurrency')) {
+    /**
+     * The visitor's chosen storefront display currency (session-scoped
+     * - see Customer\CurrencyController), falling back to whichever
+     * currency `currencies.is_default = 1` marks. Never touches
+     * anything the visitor didn't explicitly pick, so admin/vendor
+     * dashboards and order/invoice pages - which call money() directly
+     * and never this - stay in authoritative USD regardless of what a
+     * staff member last selected while browsing the storefront.
+     */
+    function currentCurrency(): array
+    {
+        static $currency = null;
+
+        if ($currency !== null) {
+            return $currency;
+        }
+
+        $code = Session::get('currency');
+        $currency = $code !== null ? Currency::find((string) $code) : null;
+        $currency ??= Currency::defaultCurrency();
+
+        return $currency;
+    }
+}
+
+if (!function_exists('displayPrice')) {
+    /**
+     * Converts a USD amount to the visitor's chosen display currency
+     * for storefront browsing only (product listings/detail pages) -
+     * deliberately separate from money(), which every authoritative
+     * money figure in this app (cart/checkout totals, order history,
+     * invoices, admin/vendor dashboards, RMA refunds, payouts) keeps
+     * calling directly in USD. Conversion uses `currencies.exchange_rate`,
+     * a manually-maintained rate, not a live FX lookup.
+     */
+    function displayPrice(float|string $usdAmount): string
+    {
+        $currency = currentCurrency();
+        $converted = (float) $usdAmount * (float) $currency['exchange_rate'];
+
+        return $currency['symbol'] . number_format($converted, 2);
     }
 }

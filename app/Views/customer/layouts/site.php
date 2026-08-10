@@ -3,10 +3,13 @@
 use App\Core\Auth;
 use App\Models\Cart;
 use App\Models\Category;
+use App\Models\Currency;
 
 $megaMenuCategories = Category::activeOrdered();
 $isLoggedIn = Auth::check();
 $cartItemCount = Cart::currentItemCount();
+$availableCurrencies = Currency::active();
+$selectedCurrency = currentCurrency();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,6 +65,19 @@ $cartItemCount = Cart::currentItemCount();
                         <input class="form-control form-control-sm" type="search" name="q" placeholder="Search products..." value="<?= e($_GET['q'] ?? '') ?>">
                     </form>
                     <ul class="navbar-nav align-items-lg-center">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <?= e($selectedCurrency['code']) ?>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <?php foreach ($availableCurrencies as $currencyOption): ?>
+                                    <a class="dropdown-item<?= $currencyOption['code'] === $selectedCurrency['code'] ? ' active' : '' ?>"
+                                       href="/currency/<?= e($currencyOption['code']) ?>">
+                                        <?= e($currencyOption['code']) ?> &mdash; <?= e($currencyOption['name']) ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        </li>
                         <?php if ($isLoggedIn): ?>
                             <li class="nav-item"><a class="nav-link" href="/wishlist"><i class="fa-regular fa-heart"></i> Wishlist</a></li>
                             <li class="nav-item"><a class="nav-link" href="/account"><i class="fa-regular fa-user"></i> Account</a></li>

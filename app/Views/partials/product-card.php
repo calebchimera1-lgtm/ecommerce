@@ -21,10 +21,10 @@ if ($product['sale_price'] !== null && (float) $product['price'] > 0) {
         <a href="/product/<?= e($product['slug']) ?>" class="product-card-name"><?= e($product['name']) ?></a>
         <div class="product-card-price">
             <?php if ($product['sale_price'] !== null): ?>
-                <span class="text-decoration-line-through text-white-50 small"><?= money($product['price']) ?></span>
-                <span class="text-warning"><?= money($product['sale_price']) ?></span>
+                <span class="text-decoration-line-through text-white-50 small"><?= displayPrice($product['price']) ?></span>
+                <span class="text-warning"><?= displayPrice($product['sale_price']) ?></span>
             <?php else: ?>
-                <span><?= money($product['price']) ?></span>
+                <span><?= displayPrice($product['price']) ?></span>
             <?php endif; ?>
         </div>
     </div>

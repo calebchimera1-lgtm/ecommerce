@@ -162,7 +162,11 @@ Closing the gaps Module 14 flagged for going live:
       feature in this app; found and fixed a real bug where cart
       activity detection missed item-only changes since `cart_items`
       updates never touch the parent `carts` row)
-- [ ] Module 27 — Multi-currency / regional tax rules
+- [x] **Module 27** — Multi-currency / regional tax rules (storefront
+      currency switcher for display only - checkout/orders/payouts
+      stay authoritative USD by design; `TaxRate` now prefers a
+      state-specific rate over the flat country rate, e.g. California
+      8.75% vs the old blanket 8% US rate)
 - [ ] Module 28 — Vendor tiers / Top Rated Seller badges
 - [ ] Module 29 — Caching layer for storefront/dashboard queries
 
