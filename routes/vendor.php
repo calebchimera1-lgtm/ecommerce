@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Controllers\Vendor\AnalyticsController;
 use App\Controllers\Vendor\AuthController;
 use App\Controllers\Vendor\DashboardController;
 use App\Controllers\Vendor\OrderController;
@@ -32,6 +33,7 @@ return function (Router $router): void {
     $router->post('/vendor/logout', [AuthController::class, 'logout'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);
 
     $router->get('/vendor/dashboard', [DashboardController::class, 'index'], [VendorMiddleware::class]);
+    $router->get('/vendor/analytics', [AnalyticsController::class, 'index'], [VendorMiddleware::class]);
 
     $router->get('/vendor/profile', [ProfileController::class, 'index'], [VendorMiddleware::class]);
     $router->post('/vendor/profile', [ProfileController::class, 'update'], [VendorMiddleware::class, VerifyCsrfMiddleware::class]);

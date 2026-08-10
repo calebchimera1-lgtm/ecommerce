@@ -7,6 +7,7 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
 $navItems = [
     ['label' => 'Dashboard', 'icon' => 'fa-gauge', 'href' => '/vendor/dashboard'],
+    ['label' => 'Analytics', 'icon' => 'fa-chart-line', 'href' => '/vendor/analytics'],
     ['label' => 'My Products', 'icon' => 'fa-box', 'href' => '/vendor/products'],
     ['label' => 'My Orders', 'icon' => 'fa-truck', 'href' => '/vendor/orders'],
     ['label' => 'Payouts', 'icon' => 'fa-sack-dollar', 'href' => '/vendor/payouts'],

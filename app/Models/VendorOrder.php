@@ -184,4 +184,111 @@ final class VendorOrder extends Model
             'payout_reference' => $reference,
         ]);
     }
+
+    // -------------------------------------------------------------
+    // Analytics aggregates for a vendor's own dashboard - the vendor
+    // counterpart to Order's dashboard aggregates (Module 9), scoped
+    // to one vendor_id throughout. "Sales" here means the vendor's own
+    // subtotal (their gross, before commission) for the orders in
+    // question, not the platform-wide order total.
+    // -------------------------------------------------------------
+
+    public static function sumSubtotalForDate(int $vendorId, string $date): float
+    {
+        $stmt = self::db()->prepare(
+            'SELECT COALESCE(SUM(subtotal), 0) AS total FROM vendor_orders
+             WHERE vendor_id = :vendor_id AND DATE(created_at) = :date'
+        );
+        $stmt->execute(['vendor_id' => $vendorId, 'date' => $date]);
+
+        return (float) $stmt->fetch()['total'];
+    }
+
+    public static function countForDate(int $vendorId, string $date): int
+    {
+        $stmt = self::db()->prepare(
+            'SELECT COUNT(*) AS total FROM vendor_orders WHERE vendor_id = :vendor_id AND DATE(created_at) = :date'
+        );
+        $stmt->execute(['vendor_id' => $vendorId, 'date' => $date]);
+
+        return (int) $stmt->fetch()['total'];
+    }
+
+    public static function sumSubtotalForMonth(int $vendorId, int $year, int $month): float
+    {
+        $stmt = self::db()->prepare(
+            'SELECT COALESCE(SUM(subtotal), 0) AS total FROM vendor_orders
+             WHERE vendor_id = :vendor_id AND YEAR(created_at) = :year AND MONTH(created_at) = :month'
+        );
+        $stmt->execute(['vendor_id' => $vendorId, 'year' => $year, 'month' => $month]);
+
+        return (float) $stmt->fetch()['total'];
+    }
+
+    public static function sumPayoutForMonth(int $vendorId, int $year, int $month): float
+    {
+        $stmt = self::db()->prepare(
+            'SELECT COALESCE(SUM(payout_amount), 0) AS total FROM vendor_orders
+             WHERE vendor_id = :vendor_id AND YEAR(created_at) = :year AND MONTH(created_at) = :month'
+        );
+        $stmt->execute(['vendor_id' => $vendorId, 'year' => $year, 'month' => $month]);
+
+        return (float) $stmt->fetch()['total'];
+    }
+
+    public static function sumSubtotalAllTime(int $vendorId): float
+    {
+        $stmt = self::db()->prepare('SELECT COALESCE(SUM(subtotal), 0) AS total FROM vendor_orders WHERE vendor_id = :vendor_id');
+        $stmt->execute(['vendor_id' => $vendorId]);
+
+        return (float) $stmt->fetch()['total'];
+    }
+
+    /**
+     * Daily gross-sales totals for a vendor over the last $days days
+     * (including today), zero-filled for days with no orders -
+     * mirrors Order::dailySalesTrend() exactly, scoped to one vendor.
+     */
+    public static function dailySalesTrend(int $vendorId, int $days = 14): array
+    {
+        $stmt = self::db()->prepare(
+            'SELECT DATE(created_at) AS day, SUM(subtotal) AS total
+             FROM vendor_orders
+             WHERE vendor_id = :vendor_id AND created_at >= :since
+             GROUP BY DATE(created_at)'
+        );
+        $since = date('Y-m-d', strtotime('-' . ($days - 1) . ' days'));
+        $stmt->execute(['vendor_id' => $vendorId, 'since' => $since]);
+        $byDay = [];
+
+        foreach ($stmt->fetchAll() as $row) {
+            $byDay[$row['day']] = (float) $row['total'];
+        }
+
+        $trend = [];
+
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $day = date('Y-m-d', strtotime("-{$i} days"));
+            $trend[] = ['day' => $day, 'total' => $byDay[$day] ?? 0.0];
+        }
+
+        return $trend;
+    }
+
+    /**
+     * A vendor's own sub-order count grouped by fulfillment status -
+     * mirrors Order::statusBreakdown(), scoped to one vendor.
+     */
+    public static function statusBreakdown(int $vendorId): array
+    {
+        $stmt = self::db()->prepare('SELECT status, COUNT(*) AS total FROM vendor_orders WHERE vendor_id = :vendor_id GROUP BY status');
+        $stmt->execute(['vendor_id' => $vendorId]);
+        $counts = [];
+
+        foreach ($stmt->fetchAll() as $row) {
+            $counts[$row['status']] = (int) $row['total'];
+        }
+
+        return $counts;
+    }
 }

@@ -121,9 +121,16 @@ payouts):
 - [x] **Module 19** — Public vendor storefronts (`/store/{slug}` page
       per vendor, "Sold by X" links from products and order history,
       fixed a gap where a suspended vendor's products stayed visible)
+- [x] **Module 20** — Vendor analytics dashboard (sales trend,
+      order-status breakdown, and best-sellers, scoped to each vendor's
+      own store - the vendor-side counterpart to Module 9)
 
-The marketplace extension (Modules 15-19) is complete: vendors apply,
+The marketplace extension (Modules 15-20) is complete: vendors apply,
 get approved, list and manage their own products under admin review,
 get their orders split out with commission calculated and payouts
-tracked, and have a public storefront customers can browse - on top of
-the original single-vendor storefront above.
+tracked, have a public storefront customers can browse, and can see
+how their store is performing - on top of the original single-vendor
+storefront above.
+
+Discussed but not scheduled: vendor ratings & reviews (separate from
+product reviews).

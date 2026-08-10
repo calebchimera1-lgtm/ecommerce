@@ -47,6 +47,35 @@ final class OrderItem extends Model
     }
 
     /**
+     * Same shape as bestSelling(), but scoped to one vendor's own
+     * products - the vendor analytics dashboard's data source. Joins
+     * through vendor_orders (not products.vendor_id directly) so it
+     * only ever counts quantity/revenue actually attributed to this
+     * vendor's sub-orders, consistent with every other vendor-scoped
+     * query in this codebase.
+     */
+    public static function bestSellingForVendor(int $vendorId, int $limit = 5): array
+    {
+        $stmt = self::db()->prepare(
+            'SELECT oi.product_id, p.name, p.slug, SUM(oi.quantity) AS units_sold, SUM(oi.subtotal) AS revenue,
+                    (SELECT image_path FROM product_images pi WHERE pi.product_id = p.id
+                        ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC LIMIT 1) AS image_path
+             FROM order_items oi
+             JOIN vendor_orders vo ON vo.id = oi.vendor_order_id
+             JOIN products p ON p.id = oi.product_id
+             WHERE vo.vendor_id = :vendor_id AND p.deleted_at IS NULL
+             GROUP BY oi.product_id, p.name, p.slug
+             ORDER BY units_sold DESC
+             LIMIT :limit'
+        );
+        $stmt->bindValue(':vendor_id', $vendorId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Best-selling products by total quantity sold across all orders.
      * Joins live product data (name/slug/image) rather than relying on
      * the order_items snapshot, so a since-renamed product shows its
