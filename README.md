@@ -171,7 +171,12 @@ Closing the gaps Module 14 flagged for going live:
       live from Module 21's approved vendor ratings, no denormalized
       column - "Top Rated Seller" requires both ≥5 reviews and ≥4.5
       average so review volume alone or one lucky rating can't earn it)
-- [ ] Module 29 — Caching layer for storefront/dashboard queries
+- [x] **Module 29** — Caching layer for storefront/dashboard queries
+      (file-based `App\Core\Cache`, no new server dependency - category
+      mega-menu data cached with explicit invalidation on admin edits,
+      homepage product rails and the 17-query admin dashboard bundle
+      cached with a short time-based TTL; stock/cart/order/payout reads
+      are untouched and never cached)
 
 Payment gateway and SMTP credentials remain configuration-only
 (`.env` - see the Stripe/PayPal/M-Pesa/`MAIL_*` keys there) - this

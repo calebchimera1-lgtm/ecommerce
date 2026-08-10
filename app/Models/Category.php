@@ -4,12 +4,24 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Core\Cache;
 use App\Core\Model;
 use App\Core\Str;
 
 final class Category extends Model
 {
     protected static string $table = 'categories';
+
+    /**
+     * Read on nearly every page request (the main nav's mega-menu,
+     * plus the homepage) but changes only when an admin edits a
+     * category - a long TTL as a safety net, backed up by explicit
+     * cache invalidation (self::invalidateCache()) from every admin
+     * action that can change this result, so an admin's edit is
+     * visible immediately rather than after up to an hour of staleness.
+     */
+    private const ACTIVE_ORDERED_CACHE_KEY = 'categories.active_ordered';
+    private const ACTIVE_ORDERED_CACHE_TTL = 3600;
 
     /**
      * Flat list ordered as a tree (parents immediately followed by
@@ -69,9 +81,22 @@ final class Category extends Model
 
     public static function activeOrdered(): array
     {
-        $stmt = self::db()->query('SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC');
+        return Cache::remember(self::ACTIVE_ORDERED_CACHE_KEY, self::ACTIVE_ORDERED_CACHE_TTL, static function (): array {
+            $stmt = self::db()->query('SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC');
 
-        return $stmt->fetchAll();
+            return $stmt->fetchAll();
+        });
+    }
+
+    /**
+     * Called from Admin\CategoryController on every create/update/
+     * delete/status-toggle - anything that could change what
+     * activeOrdered() returns - so a category edit shows up on the
+     * live site immediately rather than waiting out the cache TTL.
+     */
+    public static function invalidateCache(): void
+    {
+        Cache::forget(self::ACTIVE_ORDERED_CACHE_KEY);
     }
 
     public static function findActiveBySlug(string $slug): ?array

@@ -108,6 +108,17 @@ chown -R www-data:www-data storage/logs storage/cache storage/sessions public/up
 (Adjust `www-data` to whatever user your web server actually runs as -
 `nginx`, `apache`, etc.)
 
+`storage/cache/` (Module 29) holds the file-based cache - category
+data (1 hour TTL, invalidated immediately on any admin category edit)
+and homepage/admin-dashboard aggregates (5 minute TTL, time-based
+only). Every entry expires and self-heals on its own, so there's
+nothing to clear on a routine deploy; `rm storage/cache/*.cache` is
+only worth running after a deploy that changes what a cached query
+*returns* for the same inputs (a schema migration touching
+`categories`/`products`/`orders`, or a code change to one of the
+cached queries themselves) - safe to run any time, since the next
+request just recomputes and re-caches.
+
 ## 6. Point the web server at `public/`
 
 **Apache**: set `DocumentRoot` to the `public/` directory and ensure

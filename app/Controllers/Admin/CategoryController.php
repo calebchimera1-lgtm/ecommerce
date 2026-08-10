@@ -52,6 +52,7 @@ final class CategoryController extends Controller
             'meta_description' => self::nullable($request->input('meta_description')),
         ]);
 
+        Category::invalidateCache();
         Session::flash('success', 'Category created.');
         $this->redirect('/admin/categories');
     }
@@ -120,6 +121,7 @@ final class CategoryController extends Controller
             'meta_description' => self::nullable($request->input('meta_description')),
         ]);
 
+        Category::invalidateCache();
         Session::flash('success', 'Category updated.');
         $this->redirect('/admin/categories');
     }
@@ -130,6 +132,7 @@ final class CategoryController extends Controller
 
         try {
             Category::delete($id);
+            Category::invalidateCache();
             Session::flash('success', 'Category deleted.');
         } catch (PDOException) {
             Session::flash('errors', ['category' => ['This category cannot be deleted while it still has products assigned to it.']]);
