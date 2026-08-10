@@ -144,7 +144,10 @@ Closing the gaps Module 14 flagged for going live:
       riskiest logic: order splitting/commission math, public
       visibility gating including the Module 19 suspended-vendor
       regression, and validation/cart-math edge cases)
-- [ ] Module 23 — CI pipeline + deployment docs
+- [x] **Module 23** — CI pipeline + deployment docs (GitHub Actions
+      running lint/tests/code-style on every push against a real MySQL
+      service container; `DEPLOYMENT.md` covering server setup through
+      a post-deploy checklist)
 - [ ] Module 24 — Security review pass
 - [ ] Module 25 — Returns/refunds (RMA) workflow
 - [ ] Module 26 — Abandoned cart recovery emails
@@ -167,4 +170,13 @@ Points itself at a separate `kymera_collection_test` database (never
 your dev data), auto-creating and seeding it from
 `database/kymera_collection.sql` on first run. See
 [`docs/MODULE_22_AUTOMATED_TEST_SUITE.md`](docs/MODULE_22_AUTOMATED_TEST_SUITE.md)
-for the test database strategy and what's covered.
+for the test database strategy and what's covered, and
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) for how this
+runs automatically on every push/PR.
+
+### Deploying
+
+See [`DEPLOYMENT.md`](DEPLOYMENT.md) for the full guide - server
+requirements, environment setup, database import/migration, web
+server config, and exactly which payment gateway/SMTP credentials are
+needed and where to get them.

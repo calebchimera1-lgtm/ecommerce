@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<ruleset name="Kymera Collection">
+    <description>
+        PSR-12 coding standard for app logic (Core/Models/Services/Middleware/Controllers).
+        Views are excluded - they mix HTML and PHP by design, so PSR-12's
+        docblock/line-length rules (written for pure PHP class files) don't
+        meaningfully apply to them. Warnings (mostly line-length) are reported
+        but don't fail the build; errors do.
+    </description>
+
+    <arg name="colors"/>
+    <arg value="p"/>
+    <arg name="warning-severity" value="0"/>
+
+    <file>app/Controllers</file>
+    <file>app/Core</file>
+    <file>app/Middleware</file>
+    <file>app/Models</file>
+    <file>app/Services</file>
+
+    <rule ref="PSR12"/>
+</ruleset>
