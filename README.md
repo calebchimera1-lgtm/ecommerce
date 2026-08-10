@@ -148,7 +148,10 @@ Closing the gaps Module 14 flagged for going live:
       running lint/tests/code-style on every push against a real MySQL
       service container; `DEPLOYMENT.md` covering server setup through
       a post-deploy checklist)
-- [ ] Module 24 — Security review pass
+- [x] **Module 24** — Security review pass (exhaustive CSRF/permission
+      audit across all 96 state-changing routes - 100% coverage
+      confirmed, not sampled; found and fixed a real path-traversal
+      gap in `ImageUploader::delete()`)
 - [ ] Module 25 — Returns/refunds (RMA) workflow
 - [ ] Module 26 — Abandoned cart recovery emails
 - [ ] Module 27 — Multi-currency / regional tax rules

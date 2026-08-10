@@ -114,16 +114,36 @@ final class ImageUploader
         return $stored;
     }
 
+    /**
+     * Every current caller passes a path this class itself generated
+     * and the app previously wrote to a DB column (never raw request
+     * input) - store() only ever produces
+     * "/uploads/{subdir}/{random-hex}.{ext}", so there is no live path
+     * traversal today. The realpath() containment check below exists
+     * as defense-in-depth regardless: a prefix check on the *string*
+     * `/uploads/` alone would not catch `/uploads/../../etc/passwd`
+     * (which does start with that prefix), so if a future caller ever
+     * passes a less-trusted value, this stops it from deleting
+     * anything outside the uploads directory rather than relying on
+     * every future caller getting that right independently.
+     */
     public static function delete(string $webPath): void
     {
         if (!str_starts_with($webPath, '/uploads/')) {
             return;
         }
 
-        $fullPath = dirname(__DIR__, 3) . '/public' . $webPath;
+        $uploadsRoot = realpath(dirname(__DIR__, 3) . '/public/uploads');
+        $fullPath = realpath(dirname(__DIR__, 3) . '/public' . $webPath);
 
-        if (is_file($fullPath)) {
-            unlink($fullPath);
+        if ($uploadsRoot === false || $fullPath === false) {
+            return;
         }
+
+        if (!str_starts_with($fullPath, $uploadsRoot . DIRECTORY_SEPARATOR)) {
+            return;
+        }
+
+        unlink($fullPath);
     }
 }
